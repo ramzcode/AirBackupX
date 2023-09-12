@@ -1,0 +1,5 @@
+curl -X POST -H "Content-Type: application/json" -d '{
+    "username": "john_doe",
+    "device": "my_device",
+    "password": "my_password"
+}' http://localhost:5000/api/create
