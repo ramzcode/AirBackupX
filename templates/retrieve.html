@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Retrieve Credentials</title>
+</head>
+<body>
+    <h1>Retrieve Credentials</h1>
+    
+    <!-- Flash messages for success and error -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for message in messages %}
+                    <li class="flash-message">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Retrieve Credentials Form -->
+    <form method="POST" action="/retrieve">
+        <label for="device">Device Name:</label>
+        <input type="text" name="device" required><br><br>
+
+        <input type="submit" value="Retrieve">
+    </form>
+    
+    <!-- Display retrieved credentials -->
+    {% if username %}
+        <h2>Retrieved Credentials:</h2>
+        <p>Username: {{ username }}</p>
+        <p>Password: {{ password }}</p>
+    {% elif username == "" %}
+        <p>No credentials found for the device.</p>
+    {% endif %}
+    
+    <br>
+    <a href="/">Back to Home</a>
+    
+</body>
+</html>
+

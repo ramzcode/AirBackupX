@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Credentials</title>
+</head>
+<body>
+    <h1>Create Credentials</h1>
+    
+    <!-- Flash messages for success and error -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for message in messages %}
+                    <li class="flash-message">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Create Credentials Form -->
+    <form method="POST" action="/create">
+        <label for="username">Username:</label>
+        <input type="text" name="username" required><br><br>
+
+        <label for="device">Device Name:</label>
+        <input type="text" name="device" required><br><br>
+
+        <label for="password">Password:</label>
+        <input type="password" name="password" required><br><br>
+
+        <input type="submit" value="Create">
+    </form>
+    
+    <br>
+    <a href="/">Back to Home</a>
+    
+</body>
+</html>
+

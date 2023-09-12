@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete Credentials</title>
+</head>
+<body>
+    <h1>Delete Credentials</h1>
+    
+    <!-- Flash messages for success and error -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for message in messages %}
+                    <li class="flash-message">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    
+    <p>Are you sure you want to delete credentials for the device "{{ device }}"?</p>
+    
+    <!-- Delete Credentials Form -->
+    <form method="POST" action="/delete/{{ device }}">
+        <input type="submit" value="Delete">
+    </form>
+    
+    <br>
+    <a href="/">Cancel and Back to Home</a>
+</body>
+</html>
+

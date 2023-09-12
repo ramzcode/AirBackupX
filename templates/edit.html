@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Credentials</title>
+</head>
+<body>
+    <h1>Edit Credentials</h1>
+
+    <!-- Flash messages for success and error -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for message in messages %}
+                    <li class="flash-message">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Edit Credentials Form -->
+    <form method="POST" action="/edit/{{ device }}">
+        <label for="new_username">New Username:</label>
+        <input type="text" name="new_username" required value="{{ old_username }}"><br><br>
+
+        <label for="new_password">New Password:</label>
+        <input type="password" name="new_password" required><br><br>
+
+        <input type="submit" value="Save Changes">
+    </form>
+
+    <br>
+    <a href="/">Back to Home</a>
+</body>
+</html>
+
