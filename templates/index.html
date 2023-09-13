@@ -14,20 +14,47 @@
             color: blue;
         }
     </style>
+    <style>
+         .submenu-item {
+             cursor: pointer;
+             text-decoration: underline;
+             color: blue;
+         }
+     
+         #submenu-container {
+             white-space: nowrap;
+         }
+     </style>
+
     <!-- Include jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="alert alert-dismissible alert-danger">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% endwith %}
+
     <div class="container mt-5">
         <div class="row">
             <div class="col-md-6 offset-md-3">
                 <h1 class="text-center">Credentials Manager</h1>
 
                 <!-- Submenu -->
-                <div class="mt-4 mb-4">
+                <div class="mt-4 mb-4" id="submenu-container">
                     <span class="submenu-item" onclick="showDevices()">Available Devices</span> |
                     <span class="submenu-item" onclick="showCreateForm()">Create Credentials</span> |
-                    <span class="submenu-item" onclick="showRetrieveForm()">Retrieve Credentials</span>
+                    <span class="submenu-item" onclick="showRetrieveForm()">Retrieve Credentials</span> |
+		    <span class="submenu-item" onclick="showGroupManagement()">Group Management</span>
                 </div>
 
 		<!-- Available Devices -->
@@ -83,6 +110,33 @@
                 </script>
                 </div>
 
+		<!-- Group Management Section -->
+                <div id="group-management-section" style="display: none;">
+                    <h2>Group Management:</h2>
+                
+                    <!-- Create Group Form -->
+                    <form method="POST" action="/create_group">
+                        <div class="form-group">
+                            <label for="group_name">Group Name:</label>
+                            <input type="text" class="form-control" id="group_name" name="group_name" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Group</button>
+                    </form>
+                
+                    <!-- Delete Group Form -->
+                    <form method="POST" action="/delete_group">
+                        <div class="form-group">
+                            <label for="delete_group">Select Group to Delete:</label>
+                            <select name="delete_group" class="form-control" id="delete-group">
+                                {% for group in groups %}
+                                    <option value="{{ group }}">{{ group }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <input type="submit" class="btn btn-danger" value="Delete Group">
+                    </form>
+                </div>
+
                 <!-- Create Credentials Form -->
                 <div id="create-form-section" style="display: none;">
                     <h2>Create Credentials:</h2>
@@ -96,6 +150,14 @@
 
         		<label for="password">Password:</label>
         		<input type="password" name="password" required><br><br>
+
+			<label for="group">Select Group:</label>
+                        <select name="group" class="form-control" required>
+                            <option value="" disabled selected>Select a group</option>
+                            {% for group in groups %}
+                                <option value="{{ group }}">{{ group }}</option>
+                            {% endfor %}
+                        </select><br><br>
 
         		<input type="submit" value="Create">
                     </form>
@@ -138,18 +200,28 @@
             document.getElementById('devices-section').style.display = 'block';
             document.getElementById('create-form-section').style.display = 'none';
             document.getElementById('retrieve-form-section').style.display = 'none';
+	    document.getElementById('group-management-section').style.display = 'none';
         }
 
         function showCreateForm() {
             document.getElementById('devices-section').style.display = 'none';
             document.getElementById('create-form-section').style.display = 'block';
             document.getElementById('retrieve-form-section').style.display = 'none';
+            document.getElementById('group-management-section').style.display = 'none';
         }
 
         function showRetrieveForm() {
             document.getElementById('devices-section').style.display = 'none';
             document.getElementById('create-form-section').style.display = 'none';
             document.getElementById('retrieve-form-section').style.display = 'block';
+	    document.getElementById('group-management-section').style.display = 'none';
+        }
+        
+        function showGroupManagement() {
+            document.getElementById('devices-section').style.display = 'none';
+            document.getElementById('create-form-section').style.display = 'none';
+            document.getElementById('retrieve-form-section').style.display = 'none';
+            document.getElementById('group-management-section').style.display = 'block';
         }
     </script>
 </body>

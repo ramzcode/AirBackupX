@@ -41,6 +41,19 @@ cursor.execute('''
         encrypted_password BLOB
     )
 ''')
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS groups (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) UNIQUE
+    )
+''')
+
+#cursor.execute('''
+#    ALTER TABLE passwords
+#    ADD COLUMN group_name VARCHAR(255)
+#''')
+
 conn.commit()
 
 # Function to encrypt a password
@@ -63,17 +76,28 @@ def list_devices():
     devices = [result[0] for result in results]
     return devices
 
+# Function to list available groups
+def list_groups():
+    cursor.execute('SELECT name FROM groups')
+    results = cursor.fetchall()
+    groups = [result[0] for result in results]
+    return groups
+
+
 # Define routes and views
 @app.route('/')
 def index():
     devices = list_devices()
-    return render_template('index.html', devices=devices)
+    groups = list_groups()
+    return render_template('index.html', devices=devices, groups=groups)
+
 @app.route('/create', methods=['POST'])
 def create():
     if request.method == 'POST':
         username = request.form['username']
         device = request.form['device']
         password = request.form['password']
+        selected_group = request.form['group']
 
         # Check if any form field is empty
         if not username or not device or not password:
@@ -87,10 +111,10 @@ def create():
             else:
                 encrypted_password = encrypt_password(password)
                 try:
-                    cursor.execute('INSERT INTO passwords (username, device, encrypted_password) VALUES (%s, %s, %s)',
-                                   (username, device, encrypted_password))
+                    cursor.execute('INSERT INTO passwords (username, device, encrypted_password, group_name) VALUES (%s, %s, %s, %s)',
+                                   (username, device, encrypted_password, selected_group))
                     conn.commit()
-                    flash("Credentials saved successfully!", 'success')
+                    flash("Device created successfully!", 'success')
                 except mysql.connector.IntegrityError as e:
                     if e.errno == 1062:
                         flash(f"Device '{device}' already exists. Please choose a different device name.", 'error')
@@ -160,6 +184,78 @@ def delete(device):
     except Exception as e:
         flash(f"An error occurred: {e}", 'error')
 
+    return redirect(url_for('index'))
+
+@app.route('/create_group', methods=['POST'])
+def create_group():
+    if request.method == 'POST':
+        group_name = request.form['group_name']
+        if group_name:
+            try:
+                # Check if the group already exists
+                cursor.execute('SELECT id FROM groups WHERE name = %s', (group_name,))
+                existing_group = cursor.fetchone()
+                if existing_group:
+                    flash(f"Group '{group_name}' already exists. Please choose a different group name.", 'error')
+                else:
+                    cursor.execute('INSERT INTO groups (name) VALUES (%s)', (group_name,))
+                    conn.commit()
+                    flash(f"Group '{group_name}' created successfully!", 'success')
+            except Exception as e:
+                flash(f"An error occurred: {e}", 'error')
+        else:
+            flash("Please enter a group name.", 'error')
+
+    return redirect(url_for('index'))
+
+  #      group_name = request.form['group_name']
+  #      if group_name:
+  #          try:
+  #              cursor.execute('INSERT INTO groups (name) VALUES (%s)', (group_name,))
+  #              conn.commit()
+  #              flash(f"Group '{group_name}' created successfully!", 'success')
+  #          except mysql.connector.IntegrityError as e:
+  #              if e.errno == 1062:
+  #                  flash(f"Group '{group_name}' already exists. Please choose a different group name.", 'error')
+  #              else:
+  #                  flash(f"An error occurred: {e}", 'error')
+  #      else:
+  #          flash("Please enter a group name.", 'error')
+  #  return redirect(url_for('index'))
+
+@app.route('/delete_group', methods=['GET', 'POST'])
+def delete_group():
+    groups = list_groups()
+    
+    if request.method == 'POST':
+        # Handle group deletion here
+        group_to_delete = request.form.get('delete_group')
+        if group_to_delete:
+            # Add code to delete the selected group from the database
+            try:
+                cursor.execute('DELETE FROM groups WHERE name = %s', (group_to_delete,))
+                conn.commit()
+                flash(f"Group '{group_to_delete}' deleted successfully!", 'success')
+            except Exception as e:
+                flash(f"An error occurred: {e}", 'error')
+        else:
+            flash("Please select a group to delete.", 'error')
+
+    return redirect(url_for('index'))
+
+@app.route('/update_device_group/<device>', methods=['POST'])
+def update_device_group(device):
+    if request.method == 'POST':
+        group_id = request.form['group_id']
+        if group_id:
+            try:
+                cursor.execute('UPDATE devices SET group_id = %s WHERE name = %s', (group_id, device))
+                conn.commit()
+                flash(f"Group updated successfully for device '{device}'!", 'success')
+            except Exception as e:
+                flash(f"An error occurred: {e}", 'error')
+        else:
+            flash("Please select a group.", 'error')
     return redirect(url_for('index'))
 
 
