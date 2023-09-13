@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Credentials Manager</title>
+</head>
+<body>
+    <h1>Credentials Manager</h1>
+    
+    <!-- List available devices -->
+    <h2>Available Devices:</h2>
+    <ul>
+        {% for device in devices %}
+            <li>
+                <strong>{{ device }}</strong>
+                [<a href="{{ url_for('edit', device=device) }}">Edit</a>]
+                [<a href="{{ url_for('delete', device=device) }}">Delete</a>]
+            </li>
+        {% endfor %}
+    </ul>
+    
+    <!-- Create Credentials Form -->
+    <h2>Create Credentials:</h2>
+    <form method="POST" action="/create">
+        <label for="username">Username:</label>
+        <input type="text" name="username" required><br><br>
+
+        <label for="device">Device Name:</label>
+        <input type="text" name="device" required><br><br>
+
+        <label for="password">Password:</label>
+        <input type="password" name="password" required><br><br>
+
+        <input type="submit" value="Create">
+    </form>
+    
+    <!-- Retrieve Credentials Form -->
+    <h2>Retrieve Credentials:</h2>
+    <form method="POST" action="/retrieve">
+        <label for="device">Device Name:</label>
+        <input type="text" name="device" required><br><br>
+
+        <input type="submit" value="Retrieve">
+    </form>
+    
+</body>
+</html>
+
