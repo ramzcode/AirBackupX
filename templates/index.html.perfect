@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credentials Manager</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Include custom CSS -->
+    <style>
+        .submenu-item {
+            cursor: pointer;
+            text-decoration: underline;
+            color: blue;
+        }
+    </style>
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <h1 class="text-center">Credentials Manager</h1>
+
+                <!-- Submenu -->
+                <div class="mt-4 mb-4">
+                    <span class="submenu-item" onclick="showDevices()">Available Devices</span> |
+                    <span class="submenu-item" onclick="showCreateForm()">Create Credentials</span> |
+                    <span class="submenu-item" onclick="showRetrieveForm()">Retrieve Credentials</span>
+                </div>
+
+		<!-- Available Devices -->
+		<!-- Available Devices -->
+                <div id="devices-section">
+                    <h2>Available Devices:</h2>
+                
+                    <!-- Search Input -->
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="search-input" placeholder="Search for a device" oninput="searchDevices()">
+                    </div>
+                
+                    <ul class="list-group" id="device-list">
+                        {% for device in devices %}
+		            <!---li class="list-group-item d-flex justify-content-between align-items-center"-->
+	                    <li class="list-group-item">
+				<div class="d-flex justify-content-between align-items-center">
+                                    <strong>{{ device }}</strong>
+                                    <div>
+                                        <a href="{{ url_for('edit', device=device) }}" class="btn btn-sm btn-primary mr-2">Edit</a>
+                                        <a href="{{ url_for('delete', device=device) }}" class="btn btn-sm btn-danger">Delete</a>
+                                    </div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <script>
+                    // JavaScript function to filter devices based on search input
+                    function searchDevices() {
+                        // Get the input value
+                        var input = document.getElementById('search-input').value.toUpperCase();
+                
+                        // Get the list of devices
+                        var deviceList = document.getElementById('device-list');
+                        var devices = deviceList.getElementsByTagName('li');
+                
+                        // Loop through all devices and toggle visibility
+                        for (var i = 0; i < devices.length; i++) {
+                            var deviceName = devices[i].getElementsByTagName('strong')[0].textContent.toUpperCase();
+                            if (deviceName.includes(input)) {
+                                devices[i].style.display = 'block'; // Show matching devices
+                            } else {
+                                devices[i].style.display = 'none'; // Hide non-matching devices
+                            }
+                        }
+                
+                        // Debugging: Log the search input and the number of matching devices
+                        console.log("Search Input:", input);
+                        console.log("Matching Devices:", document.querySelectorAll('#device-list li[style="display: block;"]').length);
+                    }
+                </script>
+                </div>
+
+                <!-- Create Credentials Form -->
+                <div id="create-form-section" style="display: none;">
+                    <h2>Create Credentials:</h2>
+                    <form method="POST" action="/create">
+                        <!-- ... (Create form fields) -->
+			<label for="username">Username:</label>
+        		<input type="text" name="username" required><br><br>
+
+        		<label for="device">Device Name:</label>
+        		<input type="text" name="device" required><br><br>
+
+        		<label for="password">Password:</label>
+        		<input type="password" name="password" required><br><br>
+
+        		<input type="submit" value="Create">
+                    </form>
+                </div>
+
+                <!-- Retrieve Credentials Form -->
+                <div id="retrieve-form-section" style="display: none;">
+                    <h2>Retrieve Credentials:</h2>
+                    <form method="POST" action="/retrieve">
+                        <!-- ... (Retrieve form fields) -->
+			<form method="POST" action="/retrieve">
+        		<label for="device">Device Name:</label>
+        		<input type="text" name="device" required><br><br>
+
+        		<input type="submit" value="Retrieve">
+    		    </form>
+
+                <!-- Display retrieved credentials -->
+                {% if username %}
+                    <h2>Retrieved Credentials:</h2>
+                    <p>Username: {{ username }}</p>
+                    <p>Password: {{ password }}</p>
+                {% elif username == "" %}
+                    <p>No credentials found for the device.</p>
+                {% endif %}
+                <br>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Bootstrap JS (optional) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script>
+        // JavaScript functions to toggle sections
+        function showDevices() {
+            document.getElementById('devices-section').style.display = 'block';
+            document.getElementById('create-form-section').style.display = 'none';
+            document.getElementById('retrieve-form-section').style.display = 'none';
+        }
+
+        function showCreateForm() {
+            document.getElementById('devices-section').style.display = 'none';
+            document.getElementById('create-form-section').style.display = 'block';
+            document.getElementById('retrieve-form-section').style.display = 'none';
+        }
+
+        function showRetrieveForm() {
+            document.getElementById('devices-section').style.display = 'none';
+            document.getElementById('create-form-section').style.display = 'none';
+            document.getElementById('retrieve-form-section').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+
