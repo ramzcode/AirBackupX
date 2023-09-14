@@ -3,28 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Credentials Manager</title>
+    <title>AirBackupX</title>
     <!-- Include Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <!-- Include custom CSS -->
     <style>
+        /* Center-align submenu items */
+        .submenu-container {
+            text-align: center;
+        }
+    
+        /* Style submenu items */
         .submenu-item {
             cursor: pointer;
             text-decoration: underline;
             color: blue;
+            margin: 0 5px; /* Add horizontal margin to separate items */
+            white-space: nowrap; /* Prevent items from wrapping to the next line */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Use ellipsis for longer items */
         }
     </style>
-    <style>
-         .submenu-item {
-             cursor: pointer;
-             text-decoration: underline;
-             color: blue;
-         }
-     
-         #submenu-container {
-             white-space: nowrap;
-         }
-     </style>
 
     <!-- Include jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -47,15 +46,28 @@
     <div class="container mt-5">
         <div class="row">
             <div class="col-md-6 offset-md-3">
-                <h1 class="text-center">Credentials Manager</h1>
+                <h1 class="text-center">AirBackupX</h1>
 
                 <!-- Submenu -->
+		<div class="mt-4 mb-4 text-center">
+                   <div class="submenu-group">
+                       <span class="submenu-item" onclick="showDevices()">Available Devices</span> |
+                       <span class="submenu-item" onclick="showCreateForm()">Device Management</span> |
+                   </div>
+                   <div class="submenu-group">
+                       <span class="submenu-item" onclick="showRetrieveForm()">Retrieve Credentials</span> |
+		       <span class="submenu-item" onclick="showGroupManagement()">Group Management</span> |
+		       <span class="submenu-item" onclick="showTypeManagement()">Type Management</span>
+                   </div>
+               </div>
+<!-- Available Devices 
                 <div class="mt-4 mb-4" id="submenu-container">
                     <span class="submenu-item" onclick="showDevices()">Available Devices</span> |
-                    <span class="submenu-item" onclick="showCreateForm()">Create Credentials</span> |
+                    <span class="submenu-item" onclick="showCreateForm()">Device Management</span> |
                     <span class="submenu-item" onclick="showRetrieveForm()">Retrieve Credentials</span> |
-		    <span class="submenu-item" onclick="showGroupManagement()">Group Management</span>
-                </div>
+		    <span class="submenu-item" onclick="showGroupManagement()">Group Management</span> |
+		    <span class="submenu-item" onclick="showTypeManagement()">Type Management</span>
+		</div>-->
 
 		<!-- Available Devices -->
 		<!-- Available Devices -->
@@ -137,29 +149,39 @@
                     </form>
                 </div>
 
+
                 <!-- Create Credentials Form -->
                 <div id="create-form-section" style="display: none;">
-                    <h2>Create Credentials:</h2>
+                    <h2>Device Management:</h2>
                     <form method="POST" action="/create">
                         <!-- ... (Create form fields) -->
-			<label for="username">Username:</label>
-        		<input type="text" name="username" required><br><br>
+			<div class="form-group">
+			    <label for="username">Username:</label>
+        		    <input type="text" class="form-control" id="group_name" name="username" required>
 
-        		<label for="device">Device Name:</label>
-        		<input type="text" name="device" required><br><br>
+        		    <label for="device">Device Name:</label>
+        		    <input type="text" class="form-control" id="group_name" name="device" required>
 
-        		<label for="password">Password:</label>
-        		<input type="password" name="password" required><br><br>
+        		    <label for="password">Password:</label>
+        		    <input type="password" class="form-control" id="group_name" name="password" required>
 
-			<label for="group">Select Group:</label>
-                        <select name="group" class="form-control" required>
-                            <option value="" disabled selected>Select a group</option>
-                            {% for group in groups %}
-                                <option value="{{ group }}">{{ group }}</option>
-                            {% endfor %}
-                        </select><br><br>
+			    <label for="group">Select Group:</label>
+                            <select name="group" class="form-control" required>
+                                <option value="" disabled selected>Select a group</option>
+                                {% for group in groups %}
+                                    <option value="{{ group }}">{{ group }}</option>
+                                {% endfor %}
+                            </select>
 
-        		<input type="submit" value="Create">
+			    <label for="type">Select Type:</label>
+                            <select name="type" class="form-control" required>
+                                <option value="" disabled selected>Select a type</option>
+                                {% for type in types %}
+                                    <option value="{{ type }}">{{ type }}</option>
+                                {% endfor %}
+			    </select>
+			</div>
+        		<input type="submit" class="btn btn-danger" value="Create"><br><br>
                     </form>
                 </div>
 
@@ -185,6 +207,33 @@
                 {% endif %}
                 <br>
                 </div>
+
+		<!-- Type Management Section -->
+                <div id="type-management-section" style="display: none;">
+                    <h2>Types Management:</h2>
+
+                    <!-- Create Group Form -->
+                    <form method="POST" action="/create_type">
+                        <div class="form-group">
+                            <label for="type_name">Type Name:</label>
+                            <input type="text" class="form-control" id="type_name" name="type_name" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Type</button>
+                    </form>
+
+                    <!-- Delete Group Form -->
+                    <form method="POST" action="/delete_type">
+                        <div class="form-group">
+                            <label for="delete_type">Select Type to Delete:</label>
+                            <select name="delete_type" class="form-control" id="delete-type">
+                                {% for type in types %}
+                                    <option value="{{ type }}">{{ type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <input type="submit" class="btn btn-danger" value="Delete type">
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -201,6 +250,7 @@
             document.getElementById('create-form-section').style.display = 'none';
             document.getElementById('retrieve-form-section').style.display = 'none';
 	    document.getElementById('group-management-section').style.display = 'none';
+            document.getElementById('type-management-section').style.display = 'none';
         }
 
         function showCreateForm() {
@@ -208,6 +258,7 @@
             document.getElementById('create-form-section').style.display = 'block';
             document.getElementById('retrieve-form-section').style.display = 'none';
             document.getElementById('group-management-section').style.display = 'none';
+            document.getElementById('type-management-section').style.display = 'none';
         }
 
         function showRetrieveForm() {
@@ -215,6 +266,8 @@
             document.getElementById('create-form-section').style.display = 'none';
             document.getElementById('retrieve-form-section').style.display = 'block';
 	    document.getElementById('group-management-section').style.display = 'none';
+            document.getElementById('type-management-section').style.display = 'none';
+
         }
         
         function showGroupManagement() {
@@ -222,6 +275,15 @@
             document.getElementById('create-form-section').style.display = 'none';
             document.getElementById('retrieve-form-section').style.display = 'none';
             document.getElementById('group-management-section').style.display = 'block';
+            document.getElementById('type-management-section').style.display = 'none';
+        }
+
+        function showTypeManagement() {
+            document.getElementById('devices-section').style.display = 'none';
+            document.getElementById('create-form-section').style.display = 'none';
+            document.getElementById('retrieve-form-section').style.display = 'none';
+            document.getElementById('group-management-section').style.display = 'none';
+            document.getElementById('type-management-section').style.display = 'block';
         }
     </script>
 </body>

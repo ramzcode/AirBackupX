@@ -49,9 +49,17 @@ cursor.execute('''
     )
 ''')
 
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS types (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) UNIQUE
+    )
+''')
+
+
 #cursor.execute('''
 #    ALTER TABLE passwords
-#    ADD COLUMN group_name VARCHAR(255)
+#    ADD COLUMN type VARCHAR(255)
 #''')
 
 conn.commit()
@@ -83,13 +91,21 @@ def list_groups():
     groups = [result[0] for result in results]
     return groups
 
+# Function to list available types
+def list_types():
+    cursor.execute('SELECT name FROM types')
+    results = cursor.fetchall()
+    types = [result[0] for result in results]
+    return types
+
 
 # Define routes and views
 @app.route('/')
 def index():
     devices = list_devices()
     groups = list_groups()
-    return render_template('index.html', devices=devices, groups=groups)
+    types = list_types()
+    return render_template('index.html', devices=devices, groups=groups, types=types)
 
 @app.route('/create', methods=['POST'])
 def create():
@@ -98,6 +114,7 @@ def create():
         device = request.form['device']
         password = request.form['password']
         selected_group = request.form['group']
+        selected_type = request.form['type']
 
         # Check if any form field is empty
         if not username or not device or not password:
@@ -111,8 +128,8 @@ def create():
             else:
                 encrypted_password = encrypt_password(password)
                 try:
-                    cursor.execute('INSERT INTO passwords (username, device, encrypted_password, group_name) VALUES (%s, %s, %s, %s)',
-                                   (username, device, encrypted_password, selected_group))
+                    cursor.execute('INSERT INTO passwords (username, device, encrypted_password, group_name, type ) VALUES (%s, %s, %s, %s, %s)',
+                                   (username, device, encrypted_password, selected_group, selected_type))
                     conn.commit()
                     flash("Device created successfully!", 'success')
                 except mysql.connector.IntegrityError as e:
@@ -208,21 +225,6 @@ def create_group():
 
     return redirect(url_for('index'))
 
-  #      group_name = request.form['group_name']
-  #      if group_name:
-  #          try:
-  #              cursor.execute('INSERT INTO groups (name) VALUES (%s)', (group_name,))
-  #              conn.commit()
-  #              flash(f"Group '{group_name}' created successfully!", 'success')
-  #          except mysql.connector.IntegrityError as e:
-  #              if e.errno == 1062:
-  #                  flash(f"Group '{group_name}' already exists. Please choose a different group name.", 'error')
-  #              else:
-  #                  flash(f"An error occurred: {e}", 'error')
-  #      else:
-  #          flash("Please enter a group name.", 'error')
-  #  return redirect(url_for('index'))
-
 @app.route('/delete_group', methods=['GET', 'POST'])
 def delete_group():
     groups = list_groups()
@@ -258,6 +260,48 @@ def update_device_group(device):
             flash("Please select a group.", 'error')
     return redirect(url_for('index'))
 
+
+@app.route('/create_type', methods=['POST'])
+def create_type():
+    if request.method == 'POST':
+        type_name = request.form['type_name']
+        if type_name:
+            try:
+                # Check if the group already exists
+                cursor.execute('SELECT id FROM types WHERE name = %s', (type_name,))
+                existing_type = cursor.fetchone()
+                if existing_type:
+                    flash(f"type '{type_name}' already exists. Please choose a different type name.", 'error')
+                else:
+                    cursor.execute('INSERT INTO types (name) VALUES (%s)', (type_name,))
+                    conn.commit()
+                    flash(f"type '{type_name}' created successfully!", 'success')
+            except Exception as e:
+                flash(f"An error occurred: {e}", 'error')
+        else:
+            flash("Please enter a type name.", 'error')
+
+    return redirect(url_for('index'))
+
+@app.route('/delete_type', methods=['GET', 'POST'])
+def delete_type():
+    types = list_types()
+    
+    if request.method == 'POST':
+        # Handle group deletion here
+        type_to_delete = request.form.get('delete_type')
+        if type_to_delete:
+            # Add code to delete the selected group from the database
+            try:
+                cursor.execute('DELETE FROM types WHERE name = %s', (type_to_delete,))
+                conn.commit()
+                flash(f"Type '{type_to_delete}' deleted successfully!", 'success')
+            except Exception as e:
+                flash(f"An error occurred: {e}", 'error')
+        else:
+            flash("Please select a type to delete.", 'error')
+
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     #app.run(debug=True)
