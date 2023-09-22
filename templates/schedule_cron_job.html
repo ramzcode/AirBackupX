@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Cron Job</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <h1 class="text-center">Schedule Cron Job</h1>
+		<a href="{{ url_for('dashboard') }}">back to dashboard</a></br>
+		<a href="{{ url_for('list_cron_jobs') }}">List Existing Cron Jobs</a>
+                <!-- Flash Messages (for displaying success or error messages) -->
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <div class="alert alert-dismissible alert-{{ messages[0]['category'] }}">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    {{ messages[0]['message'] }}
+                </div>
+                {% endif %}
+                {% endwith %}
+                <!-- Cron Job Scheduling Form -->
+                <form method="POST" action="{{ url_for('schedule_cron_job') }}">
+                    <div class="form-group">
+                        <label for="site_name">Site Name:</label>
+                        <input type="text" class="form-control" id="site_name" name="site_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="script_path">Script Path:</label>
+                        <input type="text" class="form-control" id="script_path" name="script_path" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="minute">Minute (0-59):</label>
+                        <input type="text" class="form-control" id="minute" name="minute" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hour">Hour (0-23):</label>
+                        <input type="text" class="form-control" id="hour" name="hour" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="day">Day of the Month (1-31):</label>
+                        <input type="text" class="form-control" id="day" name="day" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="month">Month (1-12):</label>
+                        <input type="text" class="form-control" id="month" name="month" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="day_of_week">Day of the Week (0-6, where 0 is Sunday):</label>
+                        <input type="text" class="form-control" id="day_of_week" name="day_of_week" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Schedule Cron Job</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Include Bootstrap JS (optional) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+

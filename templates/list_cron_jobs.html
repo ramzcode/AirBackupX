@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List Cron Jobs</title>
+    <!-- Add your CSS styles or links here if needed -->
+</head>
+<body>
+    <h1>List of Scheduled Cron Jobs</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Job ID</th>
+                <th>Site Name</th>
+                <th>Script Path</th>
+                <th>Minute</th>
+                <th>Hour</th>
+                <th>Day</th>
+                <th>Month</th>
+                <th>Day of Week</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cron_job in cron_job_data %}
+            <tr>
+                <td>{{ cron_job[0] }}</td>
+                <td>{{ cron_job[1] }}</td>
+                <td>{{ cron_job[2] }}</td>
+                <td>{{ cron_job[3] }}</td>
+                <td>{{ cron_job[4] }}</td>
+                <td>{{ cron_job[5] }}</td>
+                <td>{{ cron_job[6] }}</td>
+                <td>{{ cron_job[7] }}</td>
+                <td>
+                    <a href="{{ url_for('edit_cron_job', job_id=cron_job[0]) }}">Edit</a>
+                    <a href="{{ url_for('delete_cron_job', job_id=cron_job[0]) }}">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+</body>
+</html>
+<!DOCTYPE html>
