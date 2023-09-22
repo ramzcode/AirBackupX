@@ -226,6 +226,7 @@ def list_types():
 #    return render_template('login.html')
 
 @app.route('/dashboard')
+@login_required
 def dashboard():
     devices = list_devices()
     groups = list_groups()
@@ -233,6 +234,7 @@ def dashboard():
     return render_template('dashboard.html', devices=devices, groups=groups, types=types)
 
 @app.route('/create', methods=['POST'])
+@login_required
 def create():
     if request.method == 'POST':
         username = request.form['username']
@@ -263,9 +265,10 @@ def create():
                     else:
                         flash(f"An error occurred: {e}", 'error')
 
-    return redirect(url_for('index'))
+    return redirect(url_for('dashboard'))
 
 @app.route('/retrieve', methods=['POST', 'GET'])
+@login_required
 def retrieve():
     if request.method == 'POST':
         device = request.form['device']
@@ -287,6 +290,7 @@ def retrieve():
 
 # Function to edit credentials by device name
 @app.route('/edit/<device>', methods=['POST', 'GET'])
+@login_required
 def edit(device):
     cursor.execute('SELECT username FROM passwords WHERE device = %s', (device,))
     result = cursor.fetchone()
@@ -311,13 +315,14 @@ def edit(device):
                     flash(f"An error occurred: {e}", 'error')
     else:
         flash(f"No credentials found for device {device}.", 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('dashboard'))
 
     return render_template('edit.html', device=device, old_username=old_username)
 
 
 # Function to delete credentials by device name
 @app.route('/delete/<device>', methods=['GET'])
+@login_required
 def delete(device):
     try:
         cursor.execute('DELETE FROM passwords WHERE device = %s', (device,))
@@ -326,9 +331,10 @@ def delete(device):
     except Exception as e:
         flash(f"An error occurred: {e}", 'error')
 
-    return redirect(url_for('index'))
+    return redirect(url_for('dashboard'))
 
 @app.route('/create_group', methods=['POST'])
+@login_required
 def create_group():
     if request.method == 'POST':
         group_name = request.form['group_name']
@@ -348,9 +354,10 @@ def create_group():
         else:
             flash("Please enter a group name.", 'error')
 
-    return redirect(url_for('index'))
+    return redirect(url_for('dashboard'))
 
 @app.route('/delete_group', methods=['GET', 'POST'])
+@login_required
 def delete_group():
     groups = list_groups()
     
@@ -368,9 +375,10 @@ def delete_group():
         else:
             flash("Please select a group to delete.", 'error')
 
-    return redirect(url_for('index'))
+    return redirect(url_for('dashboard'))
 
 @app.route('/update_device_group/<device>', methods=['POST'])
+@login_required
 def update_device_group(device):
     if request.method == 'POST':
         group_id = request.form['group_id']
@@ -383,10 +391,11 @@ def update_device_group(device):
                 flash(f"An error occurred: {e}", 'error')
         else:
             flash("Please select a group.", 'error')
-    return redirect(url_for('index'))
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/create_type', methods=['POST'])
+@login_required
 def create_type():
     if request.method == 'POST':
         type_name = request.form['type_name']
@@ -406,9 +415,10 @@ def create_type():
         else:
             flash("Please enter a type name.", 'error')
 
-    return redirect(url_for('index'))
+    return redirect(url_for('dashboard'))
 
 @app.route('/delete_type', methods=['GET', 'POST'])
+@login_required
 def delete_type():
     types = list_types()
     
@@ -426,7 +436,7 @@ def delete_type():
         else:
             flash("Please select a type to delete.", 'error')
 
-    return redirect(url_for('index'))
+    return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     #app.run(debug=True)
