@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from cryptography.fernet import Fernet, InvalidToken
 import mysql.connector
@@ -55,15 +55,22 @@ def profile():
     return render_template('profile.html')
 
 @app.route('/register', methods=['GET', 'POST'])
+@login_required
 def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
 
         # Check if the username and password are provided
-        if not username or not password:
+        if not username or not password or not confirm_password:
             flash('Both username and password are required.', 'error')
             return redirect(url_for('register'))
+
+        # Check if the passwords match
+        if password != confirm_password:
+            flash('Passwords do not match. Please enter the same password twice.', 'error')
+            return render_template('register.html')
 
         # Check if the username already exists in the database
         cursor.execute('SELECT id FROM users WHERE username = %s', (username,))
@@ -77,8 +84,11 @@ def register():
             cursor.execute('INSERT INTO users (username, password_hash) VALUES (%s, %s)', (username, password_hash))
             conn.commit()
 
-            flash('Registration successful! You can now log in.', 'success')
-            return redirect(url_for('login'))
+            flash('Registration successful! Account Created', 'success')
+            # If 'next' is provided in the query string, redirect there, otherwise go to 'dashboard'
+            next_page = request.args.get('next', None)
+            return redirect(next_page or url_for('dashboard'))
+            #return redirect(url_for('login'))
 
     return render_template('register.html')
 
@@ -104,9 +114,21 @@ def login():
             login_user(user)
 
             flash('Login successful!', 'success')
-            return redirect(url_for('dashboard'))
+            # Redirect the user to the stored 'next' URL or '/dashboard' if it doesn't exist
+            next_url = request.args.get('next', url_for('dashboard'))
+            return redirect(next_url)
+            #next_page = request.args.get('next')
+            #return render_template('login.html', next_page=next_page)
+            #return redirect(url_for('dashboard'))
 
         flash('Login failed. Please check your credentials.', 'error')
+
+        # Capture the 'next' query parameter if it exists
+        next_page = request.args.get('next')
+
+        if next_page:
+            # Store 'next' in the session for later use
+            session['next'] = next_page
 
     return render_template('login.html')
 
@@ -115,7 +137,7 @@ def login():
 def logout():
     logout_user()
     flash('You have been logged out.', 'info')
-    return redirect(url_for('login'))
+    return redirect(url_for('/'))
 
 
 # Function to generate or load the encryption key
