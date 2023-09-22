@@ -56,7 +56,7 @@
                    </div>
                    <div class="submenu-group">
                        <span class="submenu-item" onclick="showRetrieveForm()">Retrieve Credentials</span> |
-		       <span class="submenu-item" onclick="showGroupManagement()">Group Management</span> |
+		       <span class="submenu-item" onclick="showGroupManagement()">Site Management</span> |
 		       <span class="submenu-item" onclick="showTypeManagement()">Type Management</span>
                    </div>
                </div>
@@ -124,28 +124,28 @@
 
 		<!-- Group Management Section -->
                 <div id="group-management-section" style="display: none;">
-                    <h2>Group Management:</h2>
+                    <h2>Device Site Management:</h2>
                 
                     <!-- Create Group Form -->
                     <form method="POST" action="/create_group">
                         <div class="form-group">
-                            <label for="group_name">Group Name:</label>
+                            <label for="group_name">Site Name:</label>
                             <input type="text" class="form-control" id="group_name" name="group_name" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Create Group</button>
+                        <button type="submit" class="btn btn-primary">Create Site</button>
                     </form>
                 
                     <!-- Delete Group Form -->
                     <form method="POST" action="/delete_group">
                         <div class="form-group">
-                            <label for="delete_group">Select Group to Delete:</label>
+                            <label for="delete_group">Select Site to Delete:</label>
                             <select name="delete_group" class="form-control" id="delete-group">
                                 {% for group in groups %}
                                     <option value="{{ group }}">{{ group }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <input type="submit" class="btn btn-danger" value="Delete Group">
+                        <input type="submit" class="btn btn-danger" value="Delete Site">
                     </form>
                 </div>
 
@@ -165,9 +165,9 @@
         		    <label for="password">Password:</label>
         		    <input type="password" class="form-control" id="group_name" name="password" required>
 
-			    <label for="group">Select Group:</label>
+			    <label for="group">Select Site:</label>
                             <select name="group" class="form-control" required>
-                                <option value="" disabled selected>Select a group</option>
+                                <option value="" disabled selected>Select a site</option>
                                 {% for group in groups %}
                                     <option value="{{ group }}">{{ group }}</option>
                                 {% endfor %}
