@@ -1,10 +1,122 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from cryptography.fernet import Fernet, InvalidToken
 import mysql.connector
 import os
+from flask_bcrypt import Bcrypt
+from werkzeug.security import generate_password_hash, check_password_hash  # Import password hashing function
+
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Change this to a strong, random value
+app.secret_key = 'your_secret_key'  # Change this to a strong, random valuei
+
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+# Initialize Flask-Bcrypt for password hashing
+bcrypt = Bcrypt(app)
+
+# Define the User class for Flask-Login
+
+class User(UserMixin):
+    def __init__(self, id, username, password_hash):
+        self.id = id
+        self.username = username
+        self.password_hash = password_hash
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password).decode('utf-8')
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+@login_manager.user_loader
+def load_user(username):
+    # Load a user from the database based on the provided user_id
+    # Replace this code with your actual database query logic
+    cursor.execute('SELECT id, username, password_hash FROM users WHERE id = %s', (username,))
+    result = cursor.fetchone()
+    
+    if result:
+        user_id, username, password_hash = result
+        # Create a User object with the fetched data
+        user = User(user_id, username, password_hash)
+        return user
+    
+    # Return None if user_id is not found in the database
+    return None
+
+
+@app.route('/profile')
+@login_required
+def profile():
+    return render_template('profile.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        # Check if the username and password are provided
+        if not username or not password:
+            flash('Both username and password are required.', 'error')
+            return redirect(url_for('register'))
+
+        # Check if the username already exists in the database
+        cursor.execute('SELECT id FROM users WHERE username = %s', (username,))
+        existing_user = cursor.fetchone()
+
+        if existing_user:
+            flash('Username already exists. Please choose a different username.', 'error')
+        else:
+            # Hash and store the user's password
+            password_hash = generate_password_hash(password)
+            cursor.execute('INSERT INTO users (username, password_hash) VALUES (%s, %s)', (username, password_hash))
+            conn.commit()
+
+            flash('Registration successful! You can now log in.', 'success')
+            return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        # Check if the username and password are provided
+        if not username or not password:
+            flash('Both username and password are required.', 'error')
+            return redirect(url_for('login'))
+
+        # Query the database to retrieve the user's hashed password
+        cursor.execute('SELECT id, username, password_hash FROM users WHERE username = %s', (username,))
+        result = cursor.fetchone()
+
+        if result and check_password_hash(result[2], password):
+            # If the username and password are valid, log in the user
+            user = User(result[0], result[1], result[2])
+            login_user(user)
+
+            flash('Login successful!', 'success')
+            return redirect(url_for('dashboard'))
+
+        flash('Login failed. Please check your credentials.', 'error')
+
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
+
 
 # Function to generate or load the encryption key
 def get_or_generate_key():
@@ -57,6 +169,14 @@ cursor.execute('''
 ''')
 
 
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL
+    )
+''')
+
 #cursor.execute('''
 #    ALTER TABLE passwords
 #    ADD COLUMN type VARCHAR(255)
@@ -100,12 +220,17 @@ def list_types():
 
 
 # Define routes and views
-@app.route('/')
-def index():
+
+#@app.route('/')
+#def login():
+#    return render_template('login.html')
+
+@app.route('/dashboard')
+def dashboard():
     devices = list_devices()
     groups = list_groups()
     types = list_types()
-    return render_template('index.html', devices=devices, groups=groups, types=types)
+    return render_template('dashboard.html', devices=devices, groups=groups, types=types)
 
 @app.route('/create', methods=['POST'])
 def create():
