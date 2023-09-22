@@ -3,6 +3,10 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from cryptography.fernet import Fernet, InvalidToken
 import mysql.connector
 import os
+import cron_descriptor
+from crontab import CronTab
+import uuid
+import subprocess
 from flask_bcrypt import Bcrypt
 from werkzeug.security import generate_password_hash, check_password_hash  # Import password hashing function
 
@@ -17,6 +21,7 @@ login_manager.login_view = 'login'
 
 # Initialize Flask-Bcrypt for password hashing
 bcrypt = Bcrypt(app)
+
 
 # Define the User class for Flask-Login
 
@@ -222,6 +227,19 @@ cursor.execute('''
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL
+    )
+''')
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS cron_jobs (
+        job_id VARCHAR(255) PRIMARY KEY,
+        site_name VARCHAR(255),
+        script_path VARCHAR(255),
+        minute VARCHAR(10),
+        hour VARCHAR(10),
+        day VARCHAR(10),
+        month VARCHAR(10),
+        day_of_week VARCHAR(10)
     )
 ''')
 
@@ -485,6 +503,119 @@ def delete_type():
             flash("Please select a type to delete.", 'error')
 
     return redirect(url_for('dashboard'))
+
+# Function to create a valid cron schedule string
+def create_cron_schedule(minute, hour, day, month, day_of_week):
+    cron_string = f"{minute} {hour} {day} {month} {day_of_week}"
+    return cron_string
+
+
+
+@app.route('/schedule_cron_job', methods=['GET', 'POST'])
+def schedule_cron_job():
+    if request.method == 'POST':
+        site_name = request.form.get('site_name')
+        script_path = request.form.get('script_path')
+        minute = request.form.get('minute')
+        hour = request.form.get('hour')
+        day = request.form.get('day')
+        month = request.form.get('month')
+        day_of_week = request.form.get('day_of_week')
+
+        # Create a valid cron schedule string
+        cron_schedule = create_cron_schedule(minute, hour, day, month, day_of_week)
+
+        # Generate a unique job ID (e.g., using UUID)
+        job_id = str(uuid.uuid4())
+
+        # Initialize a CronTab object
+        cron = CronTab(user='root')  # Replace 'your_username' with the appropriate username
+
+        # Create a new cron job and set its command
+        job = cron.new(command=f'python {script_path}')
+
+        # Set the cron schedule using the cron_schedule string
+        job.setall(cron_schedule)
+
+        # Write the cron job to the user's crontab
+        cron.write()
+
+        # Store the cron job and associated data in the cron_jobs dictionary
+        cursor.execute('''
+            INSERT INTO cron_jobs (job_id, site_name, script_path, minute, hour, day, month, day_of_week)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (job_id, site_name, script_path, minute, hour, day, month, day_of_week))
+        conn.commit()
+
+        flash('Cron job scheduled successfully!', 'success')
+        return redirect(url_for('dashboard'))
+    return render_template('schedule_cron_job.html')
+
+@app.route('/list_cron_jobs', methods=['GET'])
+def list_cron_jobs():
+    cursor.execute('SELECT * FROM cron_jobs')
+    cron_job_data = cursor.fetchall()
+    return render_template('list_cron_jobs.html', cron_job_data=cron_job_data)
+
+@app.route('/edit_cron_job/<job_id>', methods=['GET', 'POST'])
+def edit_cron_job(job_id):
+    # Retrieve the stored cron job data using the job ID
+    cron_data = cron_jobs.get(job_id)
+
+    if cron_data:
+        if request.method == 'POST':
+            # Retrieve the updated form data
+            minute = request.form.get('minute')
+            hour = request.form.get('hour')
+            day = request.form.get('day')
+            month = request.form.get('month')
+            day_of_week = request.form.get('day_of_week')
+
+            # Update the cron schedule string
+            cron_schedule = create_cron_schedule(minute, hour, day, month, day_of_week)
+            cron_data['cron_schedule'] = cron_schedule
+
+            # Update the cron job's schedule
+            cron_data['cron_job'].setall(cron_schedule)
+
+            flash('Cron job updated successfully!', 'success')
+            return redirect(url_for('list_cron_jobs'))
+
+        return render_template('edit_cron_job.html', job_id=job_id, cron_data=cron_data)
+    else:
+        flash('Cron job not found.', 'error')
+        return redirect(url_for('list_cron_jobs'))
+
+@app.route('/delete_cron_job/<job_id>', methods=['GET'])
+def delete_cron_job(job_id):
+    try:
+        # Retrieve the job details from the database based on job_id
+        cursor.execute('SELECT script_path FROM cron_jobs WHERE job_id = %s', (job_id,))
+        result = cursor.fetchone()
+
+        if result:
+            script_path = result[0]
+
+            # Remove the cron job from the user's crontab
+            cron = CronTab(user='root')  # Replace 'your_username' with the appropriate username
+            jobs = cron.find_command(script_path)
+
+            for job in jobs:
+                cron.remove(job)
+            cron.write()
+
+            # Delete the entry from the cron_jobs table
+            cursor.execute('DELETE FROM cron_jobs WHERE job_id = %s', (job_id,))
+            conn.commit()
+
+            flash('Cron job deleted successfully!', 'success')
+        else:
+            flash('Cron job not found.', 'error')
+    except Exception as e:
+        flash(f"Error deleting cron job: {e}", 'error')
+
+    return redirect(url_for('list_cron_jobs'))
+
 
 if __name__ == '__main__':
     #app.run(debug=True)
