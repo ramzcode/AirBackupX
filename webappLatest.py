@@ -512,6 +512,7 @@ def create_cron_schedule(minute, hour, day, month, day_of_week):
 
 
 @app.route('/schedule_cron_job', methods=['GET', 'POST'])
+@login_required
 def schedule_cron_job():
     if request.method == 'POST':
         site_name = request.form.get('site_name')
@@ -552,43 +553,69 @@ def schedule_cron_job():
     return render_template('schedule_cron_job.html')
 
 @app.route('/list_cron_jobs', methods=['GET'])
+@login_required
 def list_cron_jobs():
     cursor.execute('SELECT * FROM cron_jobs')
     cron_job_data = cursor.fetchall()
     return render_template('list_cron_jobs.html', cron_job_data=cron_job_data)
 
-@app.route('/edit_cron_job/<job_id>', methods=['GET', 'POST'])
-def edit_cron_job(job_id):
-    # Retrieve the stored cron job data using the job ID
-    cron_data = cron_jobs.get(job_id)
 
-    if cron_data:
-        if request.method == 'POST':
-            # Retrieve the updated form data
+@app.route('/edit_cron_job/<job_id>', methods=['GET', 'POST'])
+@login_required
+def edit_cron_job(job_id):
+    if request.method == 'POST':
+        cursor.execute('SELECT script_path FROM cron_jobs WHERE job_id = %s', (job_id,))
+        result = cursor.fetchone()
+
+        if result:
+            script_path = result[0]
+
+            # Remove the cron job from the user's crontab
+            cron = CronTab(user='root')  # Replace 'your_username' with the appropriate username
+            jobs = cron.find_command(script_path)
+
+            for job in jobs:
+                cron.remove(job)
+            cron.write()
+
+            #Fetch Form data to update
             minute = request.form.get('minute')
             hour = request.form.get('hour')
             day = request.form.get('day')
             month = request.form.get('month')
             day_of_week = request.form.get('day_of_week')
 
-            # Update the cron schedule string
+            # Create a valid cron schedule string
             cron_schedule = create_cron_schedule(minute, hour, day, month, day_of_week)
-            cron_data['cron_schedule'] = cron_schedule
+            # Create a new cron job and set its command
+            job = cron.new(command=f'python {script_path}')
+            # Set the cron schedule using the cron_schedule string
+            job.setall(cron_schedule)
 
-            # Update the cron job's schedule
-            cron_data['cron_job'].setall(cron_schedule)
+            # Write the cron job to the user's crontab
+            cron.write()
+
+            #Update the cron job details in the database
+            cursor.execute('''
+                UPDATE cron_jobs
+                SET minute = %s, hour = %s, day = %s, month = %s, day_of_week = %s
+                WHERE job_id = %s
+                ''', (minute, hour, day, month, day_of_week, job_id))
+            conn.commit()
 
             flash('Cron job updated successfully!', 'success')
             return redirect(url_for('list_cron_jobs'))
+        else:
+            flash('Cron job not found.', 'error')
+            return redirect(url_for('list_cron_jobs'))
 
-        return render_template('edit_cron_job.html', job_id=job_id, cron_data=cron_data)
-    else:
-        flash('Cron job not found.', 'error')
-        return redirect(url_for('list_cron_jobs'))
+    return render_template('edit_cron_job.html')
 
-@app.route('/delete_cron_job/<job_id>', methods=['GET'])
+
+@app.route('/delete_cron_job/<job_id>', methods=['GET', 'POST'])
+@login_required
 def delete_cron_job(job_id):
-    try:
+    if request.method == 'POST':
         # Retrieve the job details from the database based on job_id
         cursor.execute('SELECT script_path FROM cron_jobs WHERE job_id = %s', (job_id,))
         result = cursor.fetchone()
@@ -609,12 +636,12 @@ def delete_cron_job(job_id):
             conn.commit()
 
             flash('Cron job deleted successfully!', 'success')
+            return redirect(url_for('list_cron_jobs'))
         else:
             flash('Cron job not found.', 'error')
-    except Exception as e:
-        flash(f"Error deleting cron job: {e}", 'error')
+            return redirect(url_for('list_cron_jobs'))
 
-    return redirect(url_for('list_cron_jobs'))
+    return render_template('delete_cron_job.html')
 
 
 if __name__ == '__main__':

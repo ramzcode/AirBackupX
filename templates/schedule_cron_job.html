@@ -12,6 +12,7 @@
         <div class="row">
             <div class="col-md-6 offset-md-3">
                 <h1 class="text-center">Schedule Cron Job</h1>
+		<a href="{{ url_for('dashboard') }}">back to dashboard</a></br>
 		<a href="{{ url_for('list_cron_jobs') }}">List Existing Cron Jobs</a>
                 <!-- Flash Messages (for displaying success or error messages) -->
                 {% with messages = get_flashed_messages() %}
