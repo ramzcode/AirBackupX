@@ -42,6 +42,20 @@
     </div>
     {% endif %}
     {% endwith %}
+    
+    <!-- Add a Bootstrap container to wrap the content -->
+    <div class="container mt-2">
+        <div class="row">
+            <!-- Profile button on the top left -->
+            <div class="col-6">
+		<a href="{{ url_for('profile') }}" class="btn btn-info">Account</a>
+            </div>
+            <!-- Logout button on the top right -->
+            <div class="col-6 text-right">
+                <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </div>
 
     <div class="container mt-5">
         <div class="row">

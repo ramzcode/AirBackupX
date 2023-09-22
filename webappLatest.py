@@ -52,7 +52,7 @@ def load_user(username):
 @app.route('/profile')
 @login_required
 def profile():
-    return render_template('profile.html')
+    return render_template('profile.html', user=current_user)
 
 @app.route('/register', methods=['GET', 'POST'])
 @login_required
@@ -91,6 +91,32 @@ def register():
             #return redirect(url_for('login'))
 
     return render_template('register.html')
+
+@app.route('/reset_password', methods=['POST'])
+@login_required
+def reset_password():
+    if request.method == 'POST':
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+
+        # Check if the new password  and new confirm password are provided
+        if not new_password or not confirm_password:
+            flash('Both new password and confirm password are required.', 'error')
+            return redirect(url_for('profile'))
+
+        # Check if the new password and confirm password match
+        if new_password == confirm_password:
+            # Update the user's password in the database
+            new_password_hash = generate_password_hash(new_password)
+            cursor.execute('UPDATE users SET password_hash = %s WHERE id = %s', (new_password_hash, current_user.id))
+            conn.commit()
+
+            flash('Password Reset successful! You can now log in with new password.', 'success')
+            return redirect(url_for('logout'))
+        else:
+            flash('Password Reset failed', 'error')
+
+    return redirect(url_for('profile'))
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -137,7 +163,7 @@ def login():
 def logout():
     logout_user()
     flash('You have been logged out.', 'info')
-    return redirect(url_for('/'))
+    return redirect(url_for('login'))
 
 
 # Function to generate or load the encryption key
