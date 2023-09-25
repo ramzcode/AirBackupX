@@ -64,10 +64,11 @@
 
                 <!-- Submenu -->
 		<div class="mt-4 mb-4 text-center">
-                   <div class="submenu-group">
+                   <div class="submenu-group" style="white-space: nowrap;">
                        <span class="submenu-item" onclick="showDevices()">Available Devices</span> |
                        <span class="submenu-item" onclick="showCreateForm()">Device Management</span> |
-		       <a class="submenu-item" href="{{ url_for('schedule_cron_job') }}">Schedule Management</a>
+		       <a class="submenu-item" href="{{ url_for('schedule_cron_job') }}">Schedule Management</a> | 
+		       <a class="submenu-item" href="{{ url_for('user_management') }}">User Management</a>
                    </div>
                    <div class="submenu-group">
                        <span class="submenu-item" onclick="showRetrieveForm()">Retrieve Credentials</span> |

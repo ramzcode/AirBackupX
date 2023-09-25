@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <!-- Include Bootstrap CSS and custom CSS if needed -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Include custom CSS -->
+    <!-- ... -->
+    <!-- Add your CSS stylesheets here -->
+</head>
+<body>
+    <h1>User Management</h1>
+
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back</a>
+    <a href="{{ url_for('user_registration') }}" class="btn btn-primary">Register New Account</a>
+
+
+
+    <!-- Delete User Section -->
+    <h2>User Accounts</h2>
+    <!-- user_management.html -->
+    <form method="POST" action="{{ url_for('delete_account') }}">
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user }}</td>
+                    <td>
+                        <input type="checkbox" name="delete_users[]" value="{{ user }}" />
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-danger">Delete Selected Accounts</button>
+    </form>
+
+
+    
+    
+    <!-- Reset Password Section -->
+    <h2>Reset Password</h2>
+    <form method="post">
+        <label for="reset_username">Username to Reset Password:</label>
+        <input type="text" id="reset_username" name="reset_username" required>
+	</br>
+        <label for="new_password">New Password:</label>
+        <input type="password" id="new_password" name="new_password" required>
+	</br>
+        <button type="submit" class="btn btn-warning">Reset Password</button>
+    </form>
+
+    <!-- Flash Messages (for displaying success or error messages) -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    <!-- Include Bootstrap JS and custom JavaScript if needed -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+

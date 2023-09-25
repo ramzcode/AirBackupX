@@ -12,8 +12,8 @@
         <div class="row">
             <div class="col-md-6 offset-md-3">
                 <h1 class="text-center">Schedule Cron Job</h1>
-		<a href="{{ url_for('dashboard') }}">back to dashboard</a></br>
-		<a href="{{ url_for('list_cron_jobs') }}">List Existing Cron Jobs</a>
+		<a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back</a>	
+		<a href="{{ url_for('list_cron_jobs') }}" class="btn btn-primary">List Scheduled Job(s)</a>
                 <!-- Flash Messages (for displaying success or error messages) -->
                 {% with messages = get_flashed_messages() %}
                 {% if messages %}
@@ -54,6 +54,7 @@
                         <input type="text" class="form-control" id="day_of_week" name="day_of_week" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Schedule Cron Job</button>
+		    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Cancel</a>
                 </form>
             </div>
         </div>

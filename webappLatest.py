@@ -59,43 +59,48 @@ def load_user(username):
 def profile():
     return render_template('profile.html', user=current_user)
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/user_registration', methods=['GET', 'POST'])
 @login_required
-def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
+def user_registration():
+    # Check if the current user's username is "2222"
+    if current_user.username == "2222":
+        if request.method == 'POST':
+            username = request.form['username']
+            password = request.form['password']
+            confirm_password = request.form['confirm_password']
 
-        # Check if the username and password are provided
-        if not username or not password or not confirm_password:
-            flash('Both username and password are required.', 'error')
-            return redirect(url_for('register'))
+            # Check if the username and password are provided
+            if not username or not password or not confirm_password:
+                flash('Both username and password are required.', 'error')
+                return redirect(url_for('user_registration.html'))
 
-        # Check if the passwords match
-        if password != confirm_password:
-            flash('Passwords do not match. Please enter the same password twice.', 'error')
-            return render_template('register.html')
+            # Check if the passwords match
+            if password != confirm_password:
+                flash('Passwords do not match. Please enter the same password twice.', 'error')
+                return render_template('user_registration.html')
 
-        # Check if the username already exists in the database
-        cursor.execute('SELECT id FROM users WHERE username = %s', (username,))
-        existing_user = cursor.fetchone()
+            # Check if the username already exists in the database
+            cursor.execute('SELECT id FROM users WHERE username = %s', (username,))
+            existing_user = cursor.fetchone()
 
-        if existing_user:
-            flash('Username already exists. Please choose a different username.', 'error')
-        else:
-            # Hash and store the user's password
-            password_hash = generate_password_hash(password)
-            cursor.execute('INSERT INTO users (username, password_hash) VALUES (%s, %s)', (username, password_hash))
-            conn.commit()
+            if existing_user:
+                flash('Username already exists. Please choose a different username.', 'error')
+            else:
+                # Hash and store the user's password
+                password_hash = generate_password_hash(password)
+                cursor.execute('INSERT INTO users (username, password_hash) VALUES (%s, %s)', (username, password_hash))
+                conn.commit()
 
-            flash('Registration successful! Account Created', 'success')
-            # If 'next' is provided in the query string, redirect there, otherwise go to 'dashboard'
-            next_page = request.args.get('next', None)
-            return redirect(next_page or url_for('dashboard'))
-            #return redirect(url_for('login'))
+                flash('Registration successful! Account Created', 'success')
+                # If 'next' is provided in the query string, redirect there, otherwise go to 'dashboard'
+                #next_page = request.args.get('next', None)
+                return redirect(url_for('dashboard'))
+                #return redirect(url_for('login'))
 
-    return render_template('register.html')
+        return render_template('user_registration.html')
+    else:
+        flash('Unauthorized Access', 'error')
+        return redirect(url_for('dashboard'))
 
 @app.route('/reset_password', methods=['POST'])
 @login_required
@@ -146,20 +151,20 @@ def login():
 
             flash('Login successful!', 'success')
             # Redirect the user to the stored 'next' URL or '/dashboard' if it doesn't exist
-            next_url = request.args.get('next', url_for('dashboard'))
-            return redirect(next_url)
+            #next_url = request.args.get('next', url_for('dashboard'))
+            #return redirect(next_url)
             #next_page = request.args.get('next')
             #return render_template('login.html', next_page=next_page)
-            #return redirect(url_for('dashboard'))
+            return redirect(url_for('dashboard'))
 
         flash('Login failed. Please check your credentials.', 'error')
 
         # Capture the 'next' query parameter if it exists
-        next_page = request.args.get('next')
+        #next_page = request.args.get('next')
 
-        if next_page:
+        #if next_page:
             # Store 'next' in the session for later use
-            session['next'] = next_page
+           # session['next'] = next_page
 
     return render_template('login.html')
 
@@ -643,6 +648,91 @@ def delete_cron_job(job_id):
 
     return render_template('delete_cron_job.html')
 
+def get_all_users():
+    try:
+        cursor.execute('SELECT username FROM users')
+        users = [result[0] for result in cursor.fetchall()]
+        return users
+    except Exception as e:
+        print(f"Error fetching users from the database: {str(e)}")
+        return []
+
+# Function to delete a user by username
+def delete_user_by_username(username):
+    try:
+        cursor.execute('DELETE FROM users WHERE username = %s', (username,))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        flash(f"An error occurred while deleting user '{username}': {str(e)}", 'error')
+
+@app.route('/delete_account', methods=['POST'])
+@login_required
+def delete_account():
+    if request.method == 'POST':
+        # Get the list of users to delete from the form
+        users_to_delete = request.form.getlist('delete_users[]')
+
+        if not users_to_delete:
+            flash('No users selected for deletion.', 'warning')
+        else:
+            # Loop through the selected users and delete their accounts
+            for user in users_to_delete:
+                cursor.execute('DELETE FROM users WHERE username = %s', (user,))
+                conn.commit()
+                flash(f'Account for user "{user}" deleted successfully.', 'success')
+
+    return redirect(url_for('user_management'))
+
+
+# Function to update a user's password by username
+def update_user_password(username, new_password):
+    try:
+        password_hash = generate_password_hash(new_password)
+        cursor.execute('UPDATE users SET password_hash = %s WHERE username = %s', (password_hash, username))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        flash(f"An error occurred while resetting the password for user '{username}': {str(e)}", 'error')
+
+
+#@app.route('/user_registration', methods=['GET', 'POST'])
+#@login_required
+#def user_registration():
+#    if current_user.username == "2222":
+#        return render_template('user_registration.html')
+#    else:
+#        flash('Unauthorized Access', 'error')
+#        return redirect(url_for('dashboard'))
+
+@app.route('/user_management', methods=['GET', 'POST'])
+@login_required
+def user_management():
+    if current_user.username == "2222":
+        # List Users
+        if request.method == 'GET':
+            users = get_all_users()  # Implement this function to fetch all users
+            return render_template('user_management.html', users=users)
+    
+        # Delete User
+        if request.method == 'POST' and 'delete_username' in request.form:
+            delete_username = request.form['delete_username']
+            if delete_username:
+                delete_user_by_username(delete_username)  # Implement this function to delete a user
+                flash(f"User '{delete_username}' deleted successfully!", 'success')
+    
+        # Reset Password
+        if request.method == 'POST' and 'reset_username' in request.form and 'new_password' in request.form:
+            reset_username = request.form['reset_username']
+            new_password = request.form['new_password']
+            if reset_username and new_password:
+                update_user_password(reset_username, new_password)  # Implement this function to reset a user's password
+                flash(f"Password for user '{reset_username}' reset successfully!", 'success')
+    
+        return redirect(url_for('user_management'))
+    else:
+        flash('Unauthorized Access', 'error')
+        return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     #app.run(debug=True)

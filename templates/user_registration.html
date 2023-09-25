@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Register</title>
     <!-- Include Bootstrap CSS (or your preferred CSS framework) -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
@@ -11,8 +11,7 @@
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-6">
-		<h2 class="text-center">AirBackupX</h2>
-                <h3 class="text-center">Login</h3>
+                <h2 class="text-center">Create User Account</h2>
                 <!-- Display Flash Messages -->
 		<!-- Display Flash Messages -->
                 {% with messages = get_flashed_messages() %}
@@ -33,7 +32,12 @@
                         <label for="password">Password:</label>
                         <input type="password" class="form-control" id="password" name="password" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Login</button>
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm Password:</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Register</button>
+		    <a href="{{ url_for('user_management') }}" class="btn btn-primary">Back</a>
                 </form>
             </div>
         </div>
