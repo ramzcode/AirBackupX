@@ -722,13 +722,26 @@ def user_management():
                 flash(f"User '{delete_username}' deleted successfully!", 'success')
     
         # Reset Password
+        # Reset Password
         if request.method == 'POST' and 'reset_username' in request.form and 'new_password' in request.form:
             reset_username = request.form['reset_username']
             new_password = request.form['new_password']
             if reset_username and new_password:
-                update_user_password(reset_username, new_password)  # Implement this function to reset a user's password
-                flash(f"Password for user '{reset_username}' reset successfully!", 'success')
-    
+                # Check if the user exists in the database before resetting the password
+                cursor.execute('SELECT id FROM users WHERE username = %s', (reset_username,))
+                existing_user = cursor.fetchone()
+                if existing_user:
+                    # User exists, proceed with password reset
+                    new_password_hash = generate_password_hash(new_password)
+                    cursor.execute('UPDATE users SET password_hash = %s WHERE username = %s',
+                                   (new_password_hash, reset_username))
+                    conn.commit()
+                    flash(f"Password for user '{reset_username}' reset successfully!", 'success')
+                else:
+                    flash(f"User '{reset_username}' does not exist. Password reset failed.", 'error')
+            else:
+                flash("Both username and new password are required.", 'error')
+        
         return redirect(url_for('user_management'))
     else:
         flash('Unauthorized Access', 'error')

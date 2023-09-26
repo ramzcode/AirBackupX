@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirBackupX</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Include custom CSS -->
+    <style>
+        /* Center-align submenu items */
+        .submenu-container {
+            text-align: center;
+        }
+    
+        /* Style submenu items */
+        .submenu-item {
+            cursor: pointer;
+            text-decoration: underline;
+            color: blue;
+            margin: 0 5px; /* Add horizontal margin to separate items */
+            white-space: nowrap; /* Prevent items from wrapping to the next line */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Use ellipsis for longer items */
+        }
+    </style>
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="alert alert-dismissible alert-danger">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% endwith %}
+    
+    <!-- Add a Bootstrap container to wrap the content -->
+    <div class="container mt-2">
+        <div class="row">
+            <!-- Profile button on the top left -->
+            <div class="col-6">
+		<a href="{{ url_for('profile') }}" class="btn btn-info">Account</a>
+            </div>
+            <!-- Logout button on the top right -->
+            <div class="col-6 text-right">
+                <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <h1 class="text-center">AirBackupX</h1>
+
+                <!-- Submenu -->
+		<div class="mt-4 mb-4 text-center">
+                   <div class="submenu-group" style="white-space: nowrap;">
+                       <span class="submenu-item" onclick="showDevices()">Dashboard</span> |
+                       <span class="submenu-item" onclick="showCreateForm()">Device Management</span> |
+		       <a class="submenu-item" href="{{ url_for('schedule_cron_job') }}">Schedule Management</a> | 
+		       <a class="submenu-item" href="{{ url_for('user_management') }}">User Management</a>
+                   </div>
+                   <div class="submenu-group">
+                       <span class="submenu-item" onclick="showRetrieveForm()">Retrieve Credentials</span> |
+		       <span class="submenu-item" onclick="showGroupManagement()">Site Management</span> |
+		       <span class="submenu-item" onclick="showTypeManagement()">Type Management</span>
+                   </div>
+               </div>
+<!-- Available Devices 
+                <div class="mt-4 mb-4" id="submenu-container">
+                    <span class="submenu-item" onclick="showDevices()">Available Devices</span> |
+                    <span class="submenu-item" onclick="showCreateForm()">Device Management</span> |
+                    <span class="submenu-item" onclick="showRetrieveForm()">Retrieve Credentials</span> |
+		    <span class="submenu-item" onclick="showGroupManagement()">Group Management</span> |
+		    <span class="submenu-item" onclick="showTypeManagement()">Type Management</span>
+		</div>-->
+
+		<!-- Available Devices -->
+		<!-- Available Devices -->
+                <div id="devices-section">
+                    <h2>Available Devices:</h2>
+                
+                    <!-- Search Input -->
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="search-input" placeholder="Search for a device" oninput="searchDevices()">
+                    </div>
+                
+                    <ul class="list-group" id="device-list">
+                        {% for device in devices %}
+		            <!---li class="list-group-item d-flex justify-content-between align-items-center"-->
+	                    <li class="list-group-item">
+				<div class="d-flex justify-content-between align-items-center">
+                                    <strong>{{ device }}</strong>
+                                    <div>
+                                        <a href="{{ url_for('edit', device=device) }}" class="btn btn-sm btn-primary mr-2">Edit</a>
+                                        <a href="{{ url_for('delete', device=device) }}" class="btn btn-sm btn-danger">Delete</a>
+                                    </div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <script>
+                    // JavaScript function to filter devices based on search input
+                    function searchDevices() {
+                        // Get the input value
+                        var input = document.getElementById('search-input').value.toUpperCase();
+                
+                        // Get the list of devices
+                        var deviceList = document.getElementById('device-list');
+                        var devices = deviceList.getElementsByTagName('li');
+                
+                        // Loop through all devices and toggle visibility
+                        for (var i = 0; i < devices.length; i++) {
+                            var deviceName = devices[i].getElementsByTagName('strong')[0].textContent.toUpperCase();
+                            if (deviceName.includes(input)) {
+                                devices[i].style.display = 'block'; // Show matching devices
+                            } else {
+                                devices[i].style.display = 'none'; // Hide non-matching devices
+                            }
+                        }
+                
+                        // Debugging: Log the search input and the number of matching devices
+                        console.log("Search Input:", input);
+                        console.log("Matching Devices:", document.querySelectorAll('#device-list li[style="display: block;"]').length);
+                    }
+                </script>
+                </div>
+
+		<!-- Group Management Section -->
+                <div id="group-management-section" style="display: none;">
+                    <h2>Device Site Management:</h2>
+                
+                    <!-- Create Group Form -->
+                    <form method="POST" action="/create_group">
+                        <div class="form-group">
+                            <label for="group_name">Site Name:</label>
+                            <input type="text" class="form-control" id="group_name" name="group_name" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Site</button>
+                    </form>
+                
+                    <!-- Delete Group Form -->
+                    <form method="POST" action="/delete_group">
+                        <div class="form-group">
+                            <label for="delete_group">Select Site to Delete:</label>
+                            <select name="delete_group" class="form-control" id="delete-group">
+                                {% for group in groups %}
+                                    <option value="{{ group }}">{{ group }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <input type="submit" class="btn btn-danger" value="Delete Site">
+                    </form>
+                </div>
+
+
+                <!-- Create Credentials Form -->
+                <div id="create-form-section" style="display: none;">
+                    <h2>Device Management:</h2>
+                    <form method="POST" action="/create">
+                        <!-- ... (Create form fields) -->
+			<div class="form-group">
+			    <label for="username">Username:</label>
+        		    <input type="text" class="form-control" id="group_name" name="username" required>
+
+        		    <label for="device">Device Name:</label>
+        		    <input type="text" class="form-control" id="group_name" name="device" required>
+
+        		    <label for="password">Password:</label>
+        		    <input type="password" class="form-control" id="group_name" name="password" required>
+
+			    <label for="group">Select Site:</label>
+                            <select name="group" class="form-control" required>
+                                <option value="" disabled selected>Select a site</option>
+                                {% for group in groups %}
+                                    <option value="{{ group }}">{{ group }}</option>
+                                {% endfor %}
+                            </select>
+
+			    <label for="type">Select Type:</label>
+                            <select name="type" class="form-control" required>
+                                <option value="" disabled selected>Select a type</option>
+                                {% for type in types %}
+                                    <option value="{{ type }}">{{ type }}</option>
+                                {% endfor %}
+			    </select>
+			</div>
+        		<input type="submit" class="btn btn-danger" value="Create"><br><br>
+                    </form>
+                </div>
+
+                <!-- Retrieve Credentials Form -->
+                <div id="retrieve-form-section" style="display: none;">
+                    <h2>Retrieve Credentials:</h2>
+                    <form method="POST" action="/retrieve">
+                        <!-- ... (Retrieve form fields) -->
+			<form method="POST" action="/retrieve">
+        		<label for="device">Device Name:</label>
+        		<input type="text" name="device" required><br><br>
+
+        		<input type="submit" value="Retrieve">
+    		    </form>
+
+                <!-- Display retrieved credentials -->
+                {% if username %}
+                    <h2>Retrieved Credentials:</h2>
+                    <p>Username: {{ username }}</p>
+                    <p>Password: {{ password }}</p>
+                {% elif username == "" %}
+                    <p>No credentials found for the device.</p>
+                {% endif %}
+                <br>
+                </div>
+
+		<!-- Type Management Section -->
+                <div id="type-management-section" style="display: none;">
+                    <h2>Types Management:</h2>
+
+                    <!-- Create Group Form -->
+                    <form method="POST" action="/create_type">
+                        <div class="form-group">
+                            <label for="type_name">Type Name:</label>
+                            <input type="text" class="form-control" id="type_name" name="type_name" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Type</button>
+                    </form>
+
+                    <!-- Delete Group Form -->
+                    <form method="POST" action="/delete_type">
+                        <div class="form-group">
+                            <label for="delete_type">Select Type to Delete:</label>
+                            <select name="delete_type" class="form-control" id="delete-type">
+                                {% for type in types %}
+                                    <option value="{{ type }}">{{ type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <input type="submit" class="btn btn-danger" value="Delete type">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Bootstrap JS (optional) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script>
+        // JavaScript functions to toggle sections
+        function showDevices() {
+            document.getElementById('devices-section').style.display = 'block';
+            document.getElementById('create-form-section').style.display = 'none';
+            document.getElementById('retrieve-form-section').style.display = 'none';
+	    document.getElementById('group-management-section').style.display = 'none';
+            document.getElementById('type-management-section').style.display = 'none';
+        }
+
+        function showCreateForm() {
+            document.getElementById('devices-section').style.display = 'none';
+            document.getElementById('create-form-section').style.display = 'block';
+            document.getElementById('retrieve-form-section').style.display = 'none';
+            document.getElementById('group-management-section').style.display = 'none';
+            document.getElementById('type-management-section').style.display = 'none';
+        }
+
+        function showRetrieveForm() {
+            document.getElementById('devices-section').style.display = 'none';
+            document.getElementById('create-form-section').style.display = 'none';
+            document.getElementById('retrieve-form-section').style.display = 'block';
+	    document.getElementById('group-management-section').style.display = 'none';
+            document.getElementById('type-management-section').style.display = 'none';
+
+        }
+        
+        function showGroupManagement() {
+            document.getElementById('devices-section').style.display = 'none';
+            document.getElementById('create-form-section').style.display = 'none';
+            document.getElementById('retrieve-form-section').style.display = 'none';
+            document.getElementById('group-management-section').style.display = 'block';
+            document.getElementById('type-management-section').style.display = 'none';
+        }
+
+        function showTypeManagement() {
+            document.getElementById('devices-section').style.display = 'none';
+            document.getElementById('create-form-section').style.display = 'none';
+            document.getElementById('retrieve-form-section').style.display = 'none';
+            document.getElementById('group-management-section').style.display = 'none';
+            document.getElementById('type-management-section').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+
