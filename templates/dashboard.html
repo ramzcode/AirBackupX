@@ -110,7 +110,7 @@
         </div>
         <h1 class="text-center">AirBackupX</h1>
 
-        <!-- Flash Messages -->
+	<!-- Flash Messages-->
         {% with messages = get_flashed_messages() %}
         {% if messages %}
         <div class="alert alert-dismissible alert-danger">
@@ -122,7 +122,7 @@
             </ul>
         </div>
         {% endif %}
-        {% endwith %}
+	{% endwith %}
 
         <!-- Your content goes here -->
 
@@ -340,6 +340,8 @@
             document.getElementById('group-management-section').style.display = 'none';
             document.getElementById('type-management-section').style.display = 'block';
         }
+	// Call the function when the page loads
+    	window.addEventListener('DOMContentLoaded', showDevices);
     </script>
 
     <!-- Include Bootstrap JS (optional) -->
