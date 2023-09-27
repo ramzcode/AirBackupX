@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataStore</title>
+</head>
+<body>
+    <h1>DataStore</h1>
+    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+    
+    <h2>Contents of {{ subpath }}</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Last Modified</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if subpath != '.' %}
+            <tr>
+                <td><a href="{{ url_for('list_files', subpath=subpath + '/..') }}">Up one level</a></td>
+                <td>Directory</td>
+                <td></td>
+            </tr>
+            {% endif %}
+            {% for item in files_and_dirs %}
+            <tr>
+                <td>
+                    {% if subpath != '.' %}
+                        <a href="{{ url_for('list_files', subpath=subpath + '/' + item) }}">{{ item }}</a>
+                    {% else %}
+                        {{ item }}
+                    {% endif %}
+                </td>
+                <td>{{ get_file_type(subpath, item) }}</td>
+                <td>{{ get_file_datetime(subpath, item) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
+
