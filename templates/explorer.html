@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Explorer</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>File Explorer</h1>
+    <h2>Current Directory: {{ folder_path }}</h2>
+    <ul>
+        {% for item, is_directory, timestamp in contents %}
+            <li>
+                {% if is_directory %}
+                    <a href="/explore/{{ item }}">{{ item }}</a> (Directory)
+                {% else %}
+                    <a href="/download/{{ item }}">{{ item }}</a> (File)
+                {% endif %}
+                - Modified: <span class="timestamp">{{ timestamp }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        // Function to format a timestamp as a user-friendly date
+        function formatTimestamp(timestamp) {
+            var date = new Date(timestamp * 1000); // Convert to milliseconds
+            return date.toLocaleString(); // Format as a localized date and time string
+        }
+
+        // Function to apply date formatting to timestamps
+        function formatTimestamps() {
+            $('.timestamp').each(function() {
+                var timestamp = parseFloat($(this).text());
+                var formattedTimestamp = formatTimestamp(timestamp);
+                $(this).text(formattedTimestamp);
+            });
+        }
+
+        // Format timestamps when the page loads initially
+        formatTimestamps();
+    </script>
+</body>
+</html>
+
