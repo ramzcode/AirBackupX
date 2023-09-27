@@ -79,7 +79,7 @@
 <body>
     <h1>File Explorer</h1>
     <h2>Current Directory: {{ folder_path }}</h2>
-
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back</a>
     <div class="search">
         <label for="search">Search Files:</label>
         <input type="text" id="search" onkeyup="searchFiles()" placeholder="Search for files...">

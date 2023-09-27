@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory, abort, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_session import Session
 from cryptography.fernet import Fernet, InvalidToken
@@ -11,6 +11,7 @@ import subprocess
 from datetime import datetime, timedelta
 from flask_bcrypt import Bcrypt
 from werkzeug.security import generate_password_hash, check_password_hash  # Import password hashing function
+from werkzeug.utils import secure_filename
 import logging
 import logging.handlers
 
@@ -91,7 +92,7 @@ def check_session_timeout():
         elapsed_time = datetime.now() - last_access_time
 
         # Set your desired session timeout duration (e.g., 30 minutes)
-        session_timeout_duration = timedelta(minutes=1)
+        session_timeout_duration = timedelta(minutes=5)
 
         if elapsed_time > session_timeout_duration:
             # Session has expired, clear the session and redirect to the login page
@@ -123,6 +124,7 @@ def load_user(username):
 @login_required
 def profile():
     return render_template('profile.html', user=current_user)
+
 
 @app.route('/user_registration', methods=['GET', 'POST'])
 @login_required
@@ -244,6 +246,60 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
+# Define your local backup directory here
+local_directory = '/root'  # Replace with the path to your local directory
+
+@app.route('/explorer')
+def explorer():
+    contents = list_directory_contents(local_directory)
+    return render_template('explorer.html', folder_path=local_directory, contents=contents)
+
+
+@app.route('/download/<path:file_path>')
+def download_file(file_path):
+    full_file_path = os.path.join(local_directory, file_path)
+
+    # Check if the file exists
+    if os.path.exists(full_file_path):
+        try:
+            # Use send_from_directory to serve the file as an attachment
+            return send_from_directory(local_directory, file_path, as_attachment=True)
+        except Exception as e:
+            return f"Error downloading file: {str(e)}"
+    else:
+        abort(404)
+
+@app.route('/explore/<path:folder_path>')
+def explore_directory(folder_path):
+    full_folder_path = os.path.join(local_directory, folder_path)
+    contents = list_directory_contents(full_folder_path)
+    return render_template('explorer.html', folder_path=folder_path, contents=contents)
+
+@app.route('/get_contents/<path:folder_path>')
+def get_contents(folder_path):
+    full_folder_path = os.path.join(local_directory, folder_path)
+    contents = list_directory_contents(full_folder_path)
+    return jsonify(contents)
+
+def list_directory_contents(directory_path):
+    try:
+        contents = []
+        for item in os.listdir(directory_path):
+            full_item_path = os.path.join(directory_path, item)
+            is_directory = os.path.isdir(full_item_path)
+            timestamp = get_timestamp(full_item_path)
+            relative_path = os.path.relpath(full_item_path, local_directory)
+            contents.append((relative_path, is_directory, timestamp))
+        return contents
+    except Exception as e:
+        return [str(e)]
+
+def get_timestamp(file_path):
+    try:
+        timestamp = os.path.getmtime(file_path)
+        return timestamp
+    except Exception as e:
+        return None
 
 # Function to generate or load the encryption key
 def get_or_generate_key():
