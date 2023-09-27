@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_session import Session
 from cryptography.fernet import Fernet, InvalidToken
 import mysql.connector
 import os
@@ -7,13 +8,20 @@ import cron_descriptor
 from crontab import CronTab
 import uuid
 import subprocess
+from datetime import datetime, timedelta
 from flask_bcrypt import Bcrypt
 from werkzeug.security import generate_password_hash, check_password_hash  # Import password hashing function
 
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Change this to a strong, random valuei
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = False  # Session will expire when the browser is closed
+app.config['SESSION_USE_SIGNER'] = True  # Session data is signed for security
+app.config['SESSION_KEY_PREFIX'] = 'your_session_prefix'  # Replace with your own prefix
+app.secret_key = 'your_secret_key'  # Change this to a strong, random value
 
+
+Session(app)
 # Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -36,6 +44,27 @@ class User(UserMixin):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+@app.before_request
+def check_session_timeout():
+    # Get the current session's last access time
+    last_access_time = session.get('last_access_time')
+
+    if last_access_time is not None:
+        # Calculate the elapsed time since the last access
+        elapsed_time = datetime.now() - last_access_time
+
+        # Set your desired session timeout duration (e.g., 30 minutes)
+        session_timeout_duration = timedelta(minutes=1)
+
+        if elapsed_time > session_timeout_duration:
+            # Session has expired, clear the session and redirect to the login page
+            session.clear()
+            flash('Your session has expired due to inactivity.', 'info')
+            return redirect(url_for('login'))
+    # Update the last access time for the session
+    session['last_access_time'] = datetime.now()
+
 
 @login_manager.user_loader
 def load_user(username):
@@ -148,6 +177,9 @@ def login():
             # If the username and password are valid, log in the user
             user = User(result[0], result[1], result[2])
             login_user(user)
+
+            # Initialize the session and set the last access time
+            session['last_access_time'] = datetime.now()
 
             flash('Login successful!', 'success')
             # Redirect the user to the stored 'next' URL or '/dashboard' if it doesn't exist
