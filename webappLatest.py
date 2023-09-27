@@ -11,6 +11,8 @@ import subprocess
 from datetime import datetime, timedelta
 from flask_bcrypt import Bcrypt
 from werkzeug.security import generate_password_hash, check_password_hash  # Import password hashing function
+import logging
+import logging.handlers
 
 
 app = Flask(__name__)
@@ -30,6 +32,40 @@ login_manager.login_view = 'login'
 # Initialize Flask-Bcrypt for password hashing
 bcrypt = Bcrypt(app)
 
+
+# Middleware to store the client IP in the thread-local storage
+@app.before_request
+def store_client_ip():
+    request.client_ip = request.remote_addr
+
+# Configure logging
+custom_log_file = 'AirBackupX_messages.log'  # Specify the log file path
+
+# Create a custom log formatter
+custom_logger = logging.getLogger('custom_logger')
+custom_logger.setLevel(logging.INFO)  # Set the desired logging level for custom logs (e.g., INFO)
+
+# Define the log format for your custom logs (includes IP info)
+custom_log_format = '[%(asctime)s] [%(ip)s] [%(levelname)s]: %(message)s'
+# Configure a custom log handler for your custom logger
+custom_log_handler = logging.handlers.TimedRotatingFileHandler(
+    custom_log_file,
+    when="midnight",
+    interval=1,
+    backupCount=7
+)
+custom_log_handler.setFormatter(logging.Formatter(custom_log_format))
+
+# Set the custom log handler's filter to include IP information
+class IPLogFilter(logging.Filter):
+    def filter(self, record):
+        record.ip = request.client_ip
+        return True
+
+custom_log_handler.addFilter(IPLogFilter())
+
+# Add the custom log handler to the custom logger
+custom_logger.addHandler(custom_log_handler)
 
 # Define the User class for Flask-Login
 
@@ -182,6 +218,7 @@ def login():
             session['last_access_time'] = datetime.now()
 
             flash('Login successful!', 'success')
+            custom_logger.info(f'User {username} logged in Successfully')
             # Redirect the user to the stored 'next' URL or '/dashboard' if it doesn't exist
             #next_url = request.args.get('next', url_for('dashboard'))
             #return redirect(next_url)
