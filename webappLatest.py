@@ -639,14 +639,24 @@ def create_cron_schedule(minute, hour, day, month, day_of_week):
     cron_string = f"{minute} {hour} {day} {month} {day_of_week}"
     return cron_string
 
-
-
 @app.route('/schedule_cron_job', methods=['GET', 'POST'])
 @login_required
 def schedule_cron_job():
     if request.method == 'POST':
         site_name = request.form.get('site_name')
-        script_path = request.form.get('script_path')
+        script_file = f"/opt/scripts/{site_name}.py"
+
+        # Ensure that the parent directory exists, create it if it doesn't
+        parent_directory = os.path.dirname(script_file)
+        if not os.path.exists(parent_directory):
+            os.makedirs(parent_directory)
+        
+        # Check if the script file exists, and create it with content if it doesn't
+        if not os.path.exists(script_file):
+            # Create the script file and add your desired content
+            with open(script_file, 'w') as file:
+                file.write("BackupCodeContentGoesHereblablaablaaaa\n")
+        
         minute = request.form.get('minute')
         hour = request.form.get('hour')
         day = request.form.get('day')
@@ -663,7 +673,7 @@ def schedule_cron_job():
         cron = CronTab(user='root')  # Replace 'your_username' with the appropriate username
 
         # Create a new cron job and set its command
-        job = cron.new(command=f'python {script_path}')
+        job = cron.new(command=f'python {script_file}')
 
         # Set the cron schedule using the cron_schedule string
         job.setall(cron_schedule)
@@ -675,7 +685,7 @@ def schedule_cron_job():
         cursor.execute('''
             INSERT INTO cron_jobs (job_id, site_name, script_path, minute, hour, day, month, day_of_week)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (job_id, site_name, script_path, minute, hour, day, month, day_of_week))
+        ''', (job_id, site_name, script_file, minute, hour, day, month, day_of_week))
         conn.commit()
 
         flash('Cron job scheduled successfully!', 'success')
