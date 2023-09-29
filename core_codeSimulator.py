@@ -2,18 +2,16 @@ import mysql.connector
 from cryptography.fernet import Fernet, InvalidToken
 import os
 
-# Generate a Fernet key
-# Function to generate or load the encryption key
+# Function to load the encryption key
 def get_or_generate_key():
     key_file = 'encryption_key.key'
     if os.path.exists(key_file):
         with open(key_file, 'rb') as file:
             key = file.read()
+            return key
     else:
-        key = Fernet.generate_key()
-        with open(key_file, 'wb') as file:
-            file.write(key)
-    return key
+        print('DecryptionKey Not Found')
+        raise FileNotFoundError('Decryption key file not found. Please save the key and save it in "encryption_key.key".')
 
 # Initialize Fernet cipher with the key
 encryption_key = get_or_generate_key()
@@ -41,7 +39,7 @@ cursor = connection.cursor(dictionary=True)
 
 
 # Specify the group you want to filter
-group_name = 'MANA1'
+group_name = 'testt'
 
 # Query to retrieve devices based on group name
 query = ("SELECT * FROM passwords WHERE group_name = %s")
@@ -62,9 +60,9 @@ for device in devices:
     device_type = device['type']
 
     # Process devices based on their type
-    if device_type == 'asdad':
+    if device_type == 'ASA':
         # Process devices of type 'asdad'
-        print(f"Processing device {device_name} of type 'asdad' with username {username} and decrypted password {decrypted_password}")
+        print(f"Processing device {device_name} of type 'ASA' with username {username} and decrypted password {decrypted_password}")
     elif device_type == 'IOS':
         # Process devices of type 'IOS'
         print(f"Processing device {device_name} of type 'IOS' with username {username} and decrypted password {decrypted_password}")
