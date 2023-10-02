@@ -821,23 +821,27 @@ def runonce_cron_job(job_id):
     return redirect(url_for('list_cron_jobs'))
 
 
-# Your Flask endpoint to handle AJAX request for fetching job status based on site name
 @app.route('/get_job_status/<site_name>', methods=['GET'])
 def get_job_status(site_name):
-    print(f"Received request for site: {site_name}")
-    # Logic to fetch job status based on the site name from your log files or database
-    # You can return 'Succeeded', 'Failed', or any other status based on your logic
-    # For example, you can read the status from a log file or fetch it from a database
+    log_file_path = 'runner.log'  # Update with the actual path to your log file
+    default_status = 'Unknown'  # Default status if site name is not found in the log file
 
-    # Sample logic to return a hardcoded status for demonstration purposes
-    # In a real application, replace this with your actual logic to fetch job status
-    if site_name == 'Madhavdd':
-        return 'Succeeded'
-    elif site_name == 'Site2':
-        return 'Failed'
-    else:
-        return 'Unknown'  # Default status if site name is not recognized
+    # Read the log file and extract status based on site name
+    try:
+        with open(log_file_path, 'r') as log_file:
+            for line in log_file:
+                site, status = line.strip().split(':')
+                if site == site_name:
+                    return status
+    except FileNotFoundError:
+        # Handle file not found error
+        return default_status
+    except Exception as e:
+        # Handle other exceptions if necessary
+        print(str(e))
 
+    # Return default status if site name is not found in the log file
+    return default_status
 
 
 def get_all_users():
