@@ -373,6 +373,20 @@ cursor.execute('''
     )
 ''')
 
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS backup_records (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        backup_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        device_name VARCHAR(255) NOT NULL,
+        site_name VARCHAR(255) NOT NULL,
+        type VARCHAR(255) NOT NULL,
+        username VARCHAR(255) NOT NULL,
+        exit_status ENUM('failed', 'succeeded') NOT NULL,
+        file_name VARCHAR(255) NOT NULL
+    )
+''')
+
+
 #cursor.execute('''
 #    ALTER TABLE passwords
 #    ADD COLUMN type VARCHAR(255)
@@ -881,6 +895,24 @@ def user_management():
     else:
         flash('Unauthorized Access', 'error')
         return redirect(url_for('dashboard'))
+
+def fetch_backup_records():
+    # Create a cursor object within the function scope
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT * FROM backup_records"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    # Close the cursor after fetching records
+    cursor.close()
+    return records
+
+
+# Route to display backup records
+@app.route('/backup_records')
+def backup_records():
+    backup_records = fetch_backup_records()
+    return render_template('backup_records.html', backup_records=backup_records)
+
 
 if __name__ == '__main__':
     #app.run(debug=True)

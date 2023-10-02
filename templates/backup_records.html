@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+	$(document).ready(function() {
+            $("#search-input").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                $("#backup-table tbody tr").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Search Input -->
+        <div class="form-group">
+            <input type="text" class="form-control" id="search-input" placeholder="Search...">
+        </div>
+
+        <!-- Table to Display Data -->
+	<table id="backup-table" class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Device Name</th>
+                    <th>Site Name</th>
+                    <th>Type</th>
+                    <th>Username</th>
+                    <th>Backup Status</th>
+                    <th>File Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in backup_records %}
+                    <tr>
+                        <td>{{ row.backup_date }}</td>
+                        <td>{{ row.device_name }}</td>
+                        <td>{{ row.site_name }}</td>
+                        <td>{{ row.type }}</td>
+                        <td>{{ row.username }}</td>
+                        <td>{{ row.exit_status }}</td>
+                        <td>{{ row.file_name }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

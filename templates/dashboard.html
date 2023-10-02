@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <!-- Include custom CSS -->
     <style>
 	/* Flash message popup styles */
@@ -33,6 +34,28 @@
             text-align: center;
         }
 
+	/* Webkit (Chrome, Safari, newer versions of Opera) */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #636465;
+        }
+
+        /* Firefox */
+        scrollbar-width: thin;
+        scrollbar-color: #3498db #f1f1f1;
+
+        /* Internet Explorer */
+        scrollbar-face-color: #3498db;
+        scrollbar-shadow-color: #f1f1f1;
+
+        /* Additional styles for scrollbar track (optional) */
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        scrollbar-track-color: #f1f1f1;
+
         /* Style submenu items */
         .submenu-item {
             cursor: pointer;
@@ -46,22 +69,27 @@
 
         /* Sidebar Styles */
         .sidebar {
-            height: 100%;
-            width: 220px;
+            height: 100vh;
+            width: 222px;
             position: fixed;
             top: 0;
             left: 0;
             background-color: #333;
-            padding-top: 55px;
+            padding-top: 69px;
             transition: width 0.3s;
         }
 
         .sidebar.collapsed {
-            width: 50px;
+            width: 75px;
         }
 
+	.sidebar-content {
+    	height: calc(100vh - 55px); /* Adjusted height considering the padding-top */
+    	overflow-y: auto;
+	}
+
         .sidebar a {
-            padding: 13px 0;
+            padding: 10px 15px;
             text-decoration: none;
             font-size: 15px;
             color: #fff;
@@ -73,8 +101,8 @@
         .sidebar a i {
             background-color: #333;
             color: #fff;
-            margin: 0 9px;
-            font-size: 24px;
+            margin-right: 9px;
+            font-size: 21px;
         }
 
         .sidebar a span {
@@ -87,7 +115,7 @@
 
         .content {
             margin-left: 250px;
-            padding: 20px;
+            padding: 60px;
             transition: margin-left 0.3s;
         }
 
@@ -97,11 +125,12 @@
 
         .menu-toggle {
             position: fixed;
-            left: 10px;
+            top: 16px;
+            left: 16px;
             background-color: #333;
             color: #fff;
             cursor: pointer;
-            z-index: 999;
+            z-index: 1000;
         }
     </style>
 
@@ -109,26 +138,28 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
+    <div class="menu-toggle" onclick="toggleSidebar()">
+        <i class='fas fa-bars mt-1' style='font-size:24px'></i>
+    </div>
     <div class="sidebar">
-        <!-- Sidebar Menu -->
-        <a href="#" onclick="showDevices()"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
-        <a href="#" onclick="showCreateForm()"><i class="fas fa-desktop"></i> <span>Device Management</span></a>
-        <a href="{{ url_for('schedule_cron_job') }}"><i class="fas fa-calendar"></i> <span>Schedule Management</span></a>
-        <a href="{{ url_for('user_management') }}"><i class="fas fa-users"></i> <span>User Management</span></a>
-        <a href="#" onclick="showRetrieveForm()"><i class="fas fa-key"></i> <span>Retrieve Credentials</span></a>
-        <a href="#" onclick="showGroupManagement()"><i class="fas fa-sitemap"></i> <span>Site Management</span></a>
-        <a href="#" onclick="showTypeManagement()"><i class="fas fa-list-alt"></i> <span>Type Management</span></a>
-        <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> <span>Profile</span></a>
-        <a href="{{ url_for('explorer') }}"><i class="fas fa-database"></i> <span>DataStore</span></a>
-        <a href="{{ url_for('logout') }}"><i class="fa fa-sign-out" style="font-size: 30px;"></i> <span>Logout</span></a>
+	<div class="sidebar-content">
+            <!-- Sidebar Menu -->
+            <a href="#" onclick="showDevices()"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
+            <a href="#" onclick="showCreateForm()"><i class="fas fa-desktop"></i> <span>Device Management</span></a>
+            <a href="{{ url_for('schedule_cron_job') }}"><i class="fas fa-calendar"></i> <span>Schedule Management</span></a>
+            <a href="{{ url_for('user_management') }}"><i class="fas fa-users"></i> <span>User Management</span></a>
+            <a href="#" onclick="showRetrieveForm()"><i class="fas fa-key"></i> <span>Retrieve Credentials</span></a>
+            <a href="#" onclick="showGroupManagement()"><i class="fas fa-sitemap"></i> <span>Site Management</span></a>
+            <a href="#" onclick="showTypeManagement()"><i class="fas fa-list-alt"></i> <span>Type Management</span></a>
+            <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> <span>Profile</span></a>
+            <a href="{{ url_for('explorer') }}"><i class="fas fa-database"></i> <span>DataStore</span></a>
+            <a href="{{ url_for('backup_records') }}"><i class='fas fa-lightbulb' style='color:while'></i> <span>Events</span></a>
+            <a href="{{ url_for('logout') }}"><i class="fa fa-sign-out" style="font-size: 25px;"></i> <span>Logout</span></a>
+	    </br>
+    	</div>
     </div>
 
     <div class="content">
-        <div class="menu-toggle" onclick="toggleSidebar()">
-            <i class='fas fa-bars mt-1' style='font-size:24px'></i>
-        </div>
-        <h1 class="text-center">AirBackupX</h1>
-
 	<!-- Flash Messages-->
 	<!-- Flash Messages -->
 	<!-- Flash Messages -->
