@@ -24,14 +24,15 @@
             <thead class="thead-dark">
                 <tr>
                     <th scope="col">Job ID</th>
-                    <th scope="col">Site Name</th>
+                    <th scope="col">Site_Name</th>
                     <th scope="col">Script Path</th>
                     <th scope="col">Minute</th>
                     <th scope="col">Hour</th>
                     <th scope="col">Day</th>
                     <th scope="col">Month</th>
                     <th scope="col">Day of Week</th>
-                    <th scope="col">Action</th>
+                    <th scope="col">Status</th>
+		    <th scope="col">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -44,6 +45,7 @@
                     <td>{{ cron_job[4] }}</td>
                     <td>{{ cron_job[5] }}</td>
                     <td>{{ cron_job[6] }}</td>
+		    <td id="status-{{ cron_job[0] }}">Loading...</td>
                     <td>{{ cron_job[7] }}</td>
                     <td>
                         <a href="{{ url_for('edit_cron_job', job_id=cron_job[0]) }}" class="btn btn-primary">Edit</a>
@@ -61,6 +63,38 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // JavaScript function to update job status dynamically using AJAX
+        function updateJobStatus() {
+	    console.log('Updating job status...');
+            // Iterate through cron_job_data and fetch job status for each site name
+            {% for cron_job in cron_job_data %}
+                var siteName = "{{ cron_job[1] }}"; // Site Name (Assuming site name is at index 1)
+                var jobId = "{{ cron_job[0] }}"; // Job ID (Assuming job ID is at index 0)
+    
+                // Send an AJAX request to the Flask endpoint to fetch job status based on site name
+                $.ajax({
+		    url: '/get_job_status/' + siteName,
+                    method: 'GET',
+                    success: function(status) {
+                        // Update the status cell with the fetched job status
+                        $('#status-' + jobId).text(status);
+                    },
+                    error: function() {
+                        // Handle errors if necessary
+                        $('#status-' + jobId).text('Error');
+                    }
+                });
+            {% endfor %}
+        }
+    
+        // Call the function to update job status when the page loads
+        $(document).ready(function() {
+            updateJobStatus(); // Update job status when the page loads
+            // You can also update job status periodically using setInterval if needed
+            // setInterval(updateJobStatus, 5000); // Update job status every 5 seconds (for example)
+        });
+    </script>
 </body>
 </html>
 
