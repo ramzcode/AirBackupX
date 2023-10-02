@@ -797,6 +797,29 @@ def delete_cron_job(job_id):
 
     return render_template('delete_cron_job.html')
 
+@app.route('/runonce_cron_job/<job_id>', methods=['GET', 'POST'])
+@login_required
+def runonce_cron_job(job_id):
+    if request.method == 'GET':
+        # Retrieve the job details from the database based on job_id
+        cursor.execute('SELECT script_path FROM cron_jobs WHERE job_id = %s', (job_id,))
+        result = cursor.fetchone()
+
+        if result:
+            script_path = result[0]
+            if os.path.exists(script_path):
+                print("Running the Job now")
+                flash('Running the Job now', 'success')
+                return redirect(url_for('list_cron_jobs'))
+            else:
+                print('Script Not Found')
+                raise FileNotFoundError('Script handling error, Please check with application owner')
+        else:
+            flash('Cron job not found.', 'error')
+            return redirect(url_for('list_cron_jobs'))
+
+    return redirect(url_for('list_cron_jobs'))
+
 def get_all_users():
     try:
         cursor.execute('SELECT username FROM users')
