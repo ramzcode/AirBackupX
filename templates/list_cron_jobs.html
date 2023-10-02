@@ -31,8 +31,9 @@
                     <th scope="col">Day</th>
                     <th scope="col">Month</th>
                     <th scope="col">Day of Week</th>
-                    <th scope="col">Status</th>
 		    <th scope="col">Action</th>
+		    <th scope="col">Status</th>
+
                 </tr>
             </thead>
             <tbody>
@@ -45,13 +46,13 @@
                     <td>{{ cron_job[4] }}</td>
                     <td>{{ cron_job[5] }}</td>
                     <td>{{ cron_job[6] }}</td>
-		    <td id="status-{{ cron_job[0] }}">Loading...</td>
                     <td>{{ cron_job[7] }}</td>
                     <td>
                         <a href="{{ url_for('edit_cron_job', job_id=cron_job[0]) }}" class="btn btn-primary">Edit</a>
                         <a href="{{ url_for('delete_cron_job', job_id=cron_job[0]) }}" class="btn btn-danger">Delete</a>
                         <a href="{{ url_for('runonce_cron_job', job_id=cron_job[0]) }}" class="btn btn-danger">RunNow</a>
                     </td>
+		    <td id="status-{{ cron_job[0] }}">Loading...</td>
                 </tr>
                 {% endfor %}
             </tbody>
