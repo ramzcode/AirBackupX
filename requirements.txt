@@ -39,3 +39,4 @@ uuid==1.30
 werkzeug==2.3.7
 zipp==3.16.2
 zope.interface==6.0
+Json
