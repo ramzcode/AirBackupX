@@ -4,7 +4,6 @@
 <head>
     <!-- Include jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <script>
 	$(document).ready(function() {
             $("#search-input").on("keyup", function() {
@@ -24,7 +23,7 @@
             <input type="text" class="form-control" id="search-input" placeholder="Search...">
         </div>
 
-        <!-- Table to Display Data -->
+          <!-- Table to Display Data -->
 	<table id="backup-table" class="table table-bordered">
             <thead>
                 <tr>
@@ -37,20 +36,56 @@
                     <th>File Name</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for row in backup_records %}
-                    <tr>
-                        <td>{{ row.backup_date }}</td>
-                        <td>{{ row.device_name }}</td>
-                        <td>{{ row.site_name }}</td>
-                        <td>{{ row.type }}</td>
-                        <td>{{ row.username }}</td>
-                        <td>{{ row.exit_status }}</td>
-                        <td>{{ row.file_name }}</td>
-                    </tr>
-                {% endfor %}
+            
+            <tbody id="backup-table-body">
+                <!-- Updated data will be inserted here -->
             </tbody>
         </table>
     </div>
+    <script>
+        function updateBackupRecords() {
+            console.log('Updating backup records...');
+            // Fetch new data from the server using Fetch API
+            fetch('/fetch_backup_records')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json(); // Parse the JSON response
+                })
+                .then(data => {
+                    // Reverse the data array to display the latest records at the top
+                    data.reverse();
+
+                    // Clear the table body
+                    var tableBody = document.getElementById('backup-table-body');
+                    tableBody.innerHTML = '';
+
+                    // Append the updated data to the table
+                    data.forEach(record => {
+                        var row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${record.backup_date}</td>
+                            <td>${record.device_name}</td>
+                            <td>${record.site_name}</td>
+                            <td>${record.type}</td>
+                            <td>${record.username}</td>
+                            <td>${record.exit_status}</td>
+                            <td>${record.file_name}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+
+        // Periodically update backup records every 5 seconds (5000 milliseconds)
+        setInterval(updateBackupRecords, 5000);
+
+        // Call the function immediately when the page loads
+        window.onload = updateBackupRecords;
+    </script>
 </body>
 </html>

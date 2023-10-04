@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory, abort, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_session import Session
+from flask_sqlalchemy import SQLAlchemy
 from cryptography.fernet import Fernet, InvalidToken
 import mysql.connector
 import os
@@ -23,6 +24,19 @@ app.config['SESSION_PERMANENT'] = False  # Session will expire when the browser 
 app.config['SESSION_USE_SIGNER'] = True  # Session data is signed for security
 app.config['SESSION_KEY_PREFIX'] = 'your_session_prefix'  # Replace with your own prefix
 app.secret_key = 'your_secret_key'  # Change this to a strong, random value
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:hack@127.0.0.1/passwords_db'  # Replace with your database URL
+db = SQLAlchemy(app)
+
+class BackupRecord(db.Model):
+    __tablename__ = 'backup_records'  # Specify the table name if different from the class name
+    id = db.Column(db.Integer, primary_key=True)
+    backup_date = db.Column(db.DateTime)
+    device_name = db.Column(db.String(255))
+    site_name = db.Column(db.String(255))
+    type = db.Column(db.String(255))  # Adjust the data type and length as per your schema
+    username = db.Column(db.String(255))  # Adjust the data type and length as per your schema
+    exit_status = db.Column(db.String(50))  # Adjust the data type and length as per your schema
+    file_name = db.Column(db.String(255))  # Adjust the data type and length as per your schema
 
 
 Session(app)
@@ -809,8 +823,12 @@ def runonce_cron_job(job_id):
         if result:
             script_path = result[0]
             if os.path.exists(script_path):
-                print("Running the Job now")
-                flash('Running the Job now', 'success')
+                flash('Job Started Successfully', 'success')
+                # Use subprocess to run the local command
+                try:
+                    subprocess.Popen(['python3.9', script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                except Exception as e:	
+                    flash(f'Error running the script: {e}', 'error')
                 return redirect(url_for('list_cron_jobs'))
             else:
                 print('Script Not Found')
@@ -823,7 +841,8 @@ def runonce_cron_job(job_id):
 
 @app.route('/get_job_status/<site_name>', methods=['GET'])
 def get_job_status(site_name):
-    log_file_path = f'{site_name}_runner.log'  # Update with the actual path to your log file
+    #log_file_path = f'{site_name}_runner.log'  # Update with the actual path to your log file
+    log_file_path = 'runner.log'  # Update with the actual path to your log file
     default_status = 'Unknown'  # Default status if site name is not found in the log file
 
     site_statuses = {}  # Dictionary to store the latest status for each site
@@ -950,24 +969,67 @@ def user_management():
         flash('Unauthorized Access', 'error')
         return redirect(url_for('dashboard'))
 
-def fetch_backup_records():
-    # Create a cursor object within the function scope
-    cursor = conn.cursor(dictionary=True)
-    query = "SELECT * FROM backup_records"
-    cursor.execute(query)
-    records = cursor.fetchall()
-    # Close the cursor after fetching records
-    cursor.close()
-    return records
+def list_backup_records():
+    data = BackupRecord.query.all()
+    #Convert the data to a list of dictionaries
+    backup_records_list = []
+    for record in data:
+        backup_records_list.append({
+            "backup_date": record.backup_date,
+            "device_name": record.device_name,
+            "site_name": record.site_name,
+            "type": record.type,
+            "username": record.username,
+            "exit_status": record.exit_status,
+            "file_name": record.file_name
+        })
+    
+    # Return the data as JSON
+    return (backup_records_list)
 
-
-# Route to display backup records
+##Perfect One
 @app.route('/backup_records')
 def backup_records():
-    backup_records = fetch_backup_records()
-    return render_template('backup_records.html', backup_records=backup_records)
+    # Query the database table and pass the data to the template
+    data = BackupRecord.query.all()
+    return render_template('backup_records.html', backup_records=data)
+
+# @app.route('/backup_records')
+# def backup_records():
+#     # Query the database table and get the data
+#     data = BackupRecord.query.all()
+    
+#     # Convert the data to a list of dictionaries
+#     backup_records_list = []
+#     for record in data:
+#         backup_records_list.append({
+#             "backup_date": record.backup_date,
+#             "device_name": record.device_name,
+#             "site_name": record.site_name,
+#             "type": record.type,
+#             "username": record.username,
+#             "exit_status": record.exit_status,
+#             "file_name": record.file_name
+#         })
+    
+#     # Return the data as JSON
+#     return jsonify(backup_records_list)
+
+# # Route to display backup records
+# @app.route('/backup_records')
+# def backup_records():
+#     backup_records = list_backup_records()
+#     return render_template('backup_records.html', backup_records=backup_records)
+
+# # Route to fetch updated backup records (server-side)
+@app.route('/fetch_backup_records')
+def fetch_backup_records():
+    backup_records = list_backup_records()
+    return jsonify(backup_records)
+
 
 
 if __name__ == '__main__':
     #app.run(debug=True)
     app.run(host='0.0.0.0', port=3030)
+    conn.close()
