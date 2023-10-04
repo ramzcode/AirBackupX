@@ -4,6 +4,7 @@ from flask_session import Session
 from cryptography.fernet import Fernet, InvalidToken
 import mysql.connector
 import os
+import json
 import cron_descriptor
 from crontab import CronTab
 import uuid
@@ -247,7 +248,7 @@ def logout():
     return redirect(url_for('login'))
 
 # Define your local backup directory here
-local_directory = '/root'  # Replace with the path to your local directory
+local_directory = '/Users/ram/Downloads/AirBackupX/Backups'  # Replace with the path to your local directory
 
 @app.route('/explorer')
 def explorer():
@@ -658,7 +659,7 @@ def create_cron_schedule(minute, hour, day, month, day_of_week):
 def schedule_cron_job():
     if request.method == 'POST':
         site_name = request.form.get('site_name')
-        script_file = f"/opt/scripts/{site_name}.py"
+        script_file = f"/Users/ram/Downloads/AirBackupX/scripts/{site_name}.py"
 
         # Ensure that the parent directory exists, create it if it doesn't
         parent_directory = os.path.dirname(script_file)
@@ -684,7 +685,7 @@ def schedule_cron_job():
         job_id = str(uuid.uuid4())
 
         # Initialize a CronTab object
-        cron = CronTab(user='root')  # Replace 'your_username' with the appropriate username
+        cron = CronTab(user='ram')  # Replace 'your_username' with the appropriate username
 
         # Create a new cron job and set its command
         job = cron.new(command=f'python {script_file}')
@@ -725,7 +726,7 @@ def edit_cron_job(job_id):
             script_path = result[0]
 
             # Remove the cron job from the user's crontab
-            cron = CronTab(user='root')  # Replace 'your_username' with the appropriate username
+            cron = CronTab(user='ram')  # Replace 'your_username' with the appropriate username
             jobs = cron.find_command(script_path)
 
             for job in jobs:
@@ -778,7 +779,7 @@ def delete_cron_job(job_id):
             script_path = result[0]
 
             # Remove the cron job from the user's crontab
-            cron = CronTab(user='root')  # Replace 'your_username' with the appropriate username
+            cron = CronTab(user='ram')  # Replace 'your_username' with the appropriate username
             jobs = cron.find_command(script_path)
 
             for job in jobs:
@@ -820,19 +821,25 @@ def runonce_cron_job(job_id):
 
     return redirect(url_for('list_cron_jobs'))
 
-
 @app.route('/get_job_status/<site_name>', methods=['GET'])
 def get_job_status(site_name):
-    log_file_path = 'runner.log'  # Update with the actual path to your log file
+    log_file_path = f'{site_name}_runner.log'  # Update with the actual path to your log file
     default_status = 'Unknown'  # Default status if site name is not found in the log file
+
+    site_statuses = {}  # Dictionary to store the latest status for each site
 
     # Read the log file and extract status based on site name
     try:
         with open(log_file_path, 'r') as log_file:
             for line in log_file:
                 site, status = line.strip().split(':')
-                if site == site_name:
-                    return status
+                # Update status for the site in the dictionary
+                site_statuses[site] = status
+
+        # Get the latest status for the requested site_name
+        latest_status = site_statuses.get(site_name, default_status)
+        return latest_status
+
     except FileNotFoundError:
         # Handle file not found error
         return default_status
