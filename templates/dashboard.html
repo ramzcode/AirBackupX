@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Favicon -->
+    <!-- <link rel="icon" href="{{ url_for('static', filename='AirBackupX-Favicon.png') }}" type="image/png" sizes="32x32"> -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
     <title>AirBackupX</title>
     <!-- Include Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -12,16 +18,16 @@
     <!-- Include custom CSS -->
     <style>
 	/* Flash message popup styles */
-        .flash-popup {
-            position: fixed;
-            top: 10px; /* Adjust the top position as needed */
-            right: 10px; /* Adjust the right position as needed */
-            color: #fff;
-            padding: 10px;
-            border-radius: 5px;
-            display: none; /* Initially hidden */
-            z-index: 999; /* Ensure it appears on top of other content */
-        }
+    .flash-popup {
+        position: fixed;
+        top: 10px; /* Adjust the top position as needed */
+        right: 10px; /* Adjust the right position as needed */
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        display: none; /* Initially hidden */
+        z-index: 999; /* Ensure it appears on top of other content */
+    }
 	/* Styles for success messages */
 	.flash-popup.success {
     	    background-color: rgba(0, 255, 0, 0.9); /* Green background for success messages */
@@ -75,7 +81,7 @@
             top: 0;
             left: 0;
             background-color: #333;
-            padding-top: 69px;
+            padding-top: 85px;
             transition: width 0.3s;
         }
 
@@ -125,12 +131,29 @@
 
         .menu-toggle {
             position: fixed;
-            top: 16px;
+            top: 48px;
             left: 16px;
             background-color: #333;
             color: #fff;
             cursor: pointer;
             z-index: 1000;
+        }
+
+        .logo-container {
+            position: fixed;
+            top: 19px;
+            left: 35px; /* Adjust the left position as needed to separate it from the toggle button */
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed .logo-container {
+            display: none; /* Hide the logo when sidebar is collapsed */
+        }
+
+        #logo {
+            width: 165px; /* Set the width to an appropriate value */
+            height: auto; /* Maintain aspect ratio */
+            margin-left: 14px;
         }
     </style>
 
@@ -138,9 +161,16 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
+    
     <div class="menu-toggle" onclick="toggleSidebar()">
         <i class='fas fa-bars mt-1' style='font-size:24px'></i>
     </div>
+
+    <!-- Logo Container -->
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logoWhiteT.png') }}" id="logo" alt="Logo">
+    </div>
+
     <div class="sidebar">
 	<div class="sidebar-content">
             <!-- Sidebar Menu -->
@@ -176,6 +206,9 @@
             {% endif %}
             {% endwith %}
         </div>
+
+        <!-- Logo
+        <img src="logo.png" id="logo" alt="Logo"> -->
 
 
 	<!--<div id="flash-messages">
@@ -379,6 +412,11 @@
 
             sidebar.classList.toggle('collapsed');
             content.classList.toggle('collapsed');
+
+            // Toggle the visibility of the image next to the toggle button
+            const logoContainer = document.querySelector('.logo-container');
+            logoContainer.style.display = sidebar.classList.contains('collapsed') ? 'none' : 'block';
+
         }
 
         // JavaScript functions to toggle sections
@@ -431,7 +469,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <!-- Include Font Awesome Icons (optional) -->
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <!-- <script src="https://kit.fontawesome.com/a076d05399.js"></script> -->
     <!--<script>
     document.addEventListener("DOMContentLoaded", function() {
         // Target the flash messages container

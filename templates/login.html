@@ -3,15 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Favicon -->
+    <!-- <link rel="icon" href="{{ url_for('static', filename='AirBackupX-Favicon.png') }}" type="image/png" sizes="32x32"> -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
     <title>Login</title>
     <!-- Include Bootstrap CSS (or your preferred CSS framework) -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        #logo {
+            width: 250px; /* Set the width to an appropriate value */
+            height: auto; /* Maintain aspect ratio */
+            margin: 0 auto;
+            display: block;
+            margin-bottom: 50px;
+            margin-top: 50px;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-6">
-		<h2 class="text-center">AirBackupX</h2>
+		<img src="{{ url_for('static', filename='images/login_logo.png') }}" id="logo" alt="Logo">
                 <h3 class="text-center">Login</h3>
                 <!-- Display Flash Messages -->
 		<!-- Display Flash Messages -->
