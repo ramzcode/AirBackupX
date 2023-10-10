@@ -16,7 +16,8 @@ from werkzeug.security import generate_password_hash, check_password_hash  # Imp
 from werkzeug.utils import secure_filename
 import logging
 import logging.handlers
-
+#from routes.widgets import widgets_bp
+from routes.widgets import widget_type
 
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -26,6 +27,13 @@ app.config['SESSION_KEY_PREFIX'] = 'your_session_prefix'  # Replace with your ow
 app.secret_key = 'your_secret_key'  # Change this to a strong, random value
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:hack@127.0.0.1/passwords_db'  # Replace with your database URL
 db = SQLAlchemy(app)
+
+# Register the widgets blueprint
+#app.register_blueprint(widgets_bp, url_prefix='/widgets_type')
+
+# Import routes after creating the Flask app and SQLAlchemy instance
+#from routes import widgets
+# Register the route function with Flask
 
 class BackupRecord(db.Model):
     __tablename__ = 'backup_records'  # Specify the table name if different from the class name
@@ -37,7 +45,6 @@ class BackupRecord(db.Model):
     username = db.Column(db.String(255))  # Adjust the data type and length as per your schema
     exit_status = db.Column(db.String(50))  # Adjust the data type and length as per your schema
     file_name = db.Column(db.String(255))  # Adjust the data type and length as per your schema
-
 
 Session(app)
 # Initialize Flask-Login
@@ -53,6 +60,12 @@ bcrypt = Bcrypt(app)
 @app.before_request
 def store_client_ip():
     request.client_ip = request.remote_addr
+
+# Register routes using add_url_rule()
+#app.add_url_rule('/widget_device', 'widget_device', widget_device)
+#app.add_url_rule('/widget_site', 'widget_site', widget_site)
+app.add_url_rule('/widgets_type', 'widget_type', widget_type)
+#app.add_url_rule('/widget_backup', 'widget_backup', widget_backup)
 
 # Configure logging
 custom_log_file = 'AirBackupX_messages.log'  # Specify the log file path

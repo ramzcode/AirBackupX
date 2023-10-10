@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <!-- Include custom CSS -->
     <style>
 	/* Flash message popup styles */
@@ -120,6 +119,7 @@
         }
 
         .content {
+            margin-top: -32px;
             margin-left: 250px;
             padding: 60px;
             transition: margin-left 0.3s;
@@ -154,6 +154,60 @@
             width: 165px; /* Set the width to an appropriate value */
             height: auto; /* Maintain aspect ratio */
             margin-left: 14px;
+        }
+
+        /* CSS for the widgets */
+        .widget {
+            width: 247px;
+            height: 130px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .widget:hover {
+            background-color: #f2f2f2;
+        }
+
+        /* CSS for the widget container */
+        .widget-container {
+            display: flex; /* Use flexbox to display widgets side by side */
+            justify-content: space-around;
+            flex-wrap: wrap
+        }
+
+        /* CSS for widget name */
+        .widget-name h3 {
+            margin-top: 20px;
+            font-size: 18px;
+        }   
+        
+        /* CSS for widget number */
+        .widget-number p {
+            margin-bottom: 10px;
+            font-size: 24px;
+            color: #007bff; /* Example color */
+        }
+
+        /* CSS for widget icon */
+        .widget-icon {
+            margin-bottom: 10px;
+            font-size: 30px;
+            text-align: right;
+            margin-left: 10px;
+        }
+
+        /* CSS for the widget details (number and icon) */
+        .widget-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
     </style>
 
@@ -239,6 +293,121 @@
 	{% endwith %}-->
 
         <!-- Your content goes here -->
+        <!-- Widget Container -->
+        <div class="widget-container">
+            <!-- Widget for Total Devices -->
+            <div class="widget" onclick="window.location.href='/total-devices-page'">
+                <!-- Widget Name (Top Left) -->
+                <div class="widget-name">
+                    <h3>Total Devices</h3>
+                </div>
+                
+                <!-- Widget Number and Icon (Second Row) -->
+                <div class="widget-details">
+                    <!-- Number Obtained by Querying Flask Route (Second Row Left) -->
+                    <div class="widget-number">
+                        <p id="total-devices-number">Loading...</p>
+                    </div>
+                    
+                    <!-- Icon (Second Row Right) -->
+                    <div class="widget-icon">
+                        <i class="fas fa-desktop"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget for Total Jobs -->
+            <div class="widget" onclick="window.location.href='/total-devices-page'">
+                <!-- Widget Name (Top Left) -->
+                <div class="widget-name">
+                    <h3>Total Jobs</h3>
+                </div>
+                
+                <!-- Widget Number and Icon (Second Row) -->
+                <div class="widget-details">
+                    <!-- Number Obtained by Querying Flask Route (Second Row Left) -->
+                    <div class="widget-number">
+                        <p id="total-Jobs">Loading...</p>
+                    </div>
+                    
+                    <!-- Icon (Second Row Right) -->
+                    <div class="widget-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget for Total Types -->
+            <div class="widget" onclick="showTypeManagement()">
+                <!-- Widget Name (Top Left) -->
+                <div class="widget-name">
+                    <h3>Total Types</h3>
+                </div>
+                
+                <!-- Widget Number and Icon (Second Row) -->
+                <div class="widget-details">
+                    <!-- Number Obtained by Querying Flask Route (Second Row Left) -->
+                    <div class="widget-number">
+                        <p id="total-types">Loading...</p>
+                    </div>
+                    
+                    <!-- Icon (Second Row Right) -->
+                    <div class="widget-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget for Total Backups -->
+            <div class="widget" onclick="window.location.href='/total-devices-page'">
+                <!-- Widget Name (Top Left) -->
+                <div class="widget-name">
+                    <h3>Total Backups</h3>
+                </div>
+                
+                <!-- Widget Number and Icon (Second Row) -->
+                <div class="widget-details">
+                    <!-- Number Obtained by Querying Flask Route (Second Row Left) -->
+                    <div class="widget-number">
+                        <p id="total-backup">Loading...</p>
+                    </div>
+                    
+                    <!-- Icon (Second Row Right) -->
+                    <div class="widget-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- <div class="widget" onclick="window.location.href='/total-devices-page'">
+                <h3>Total Devices</h3>
+                <i class="fas fa-desktop widget-icon"></i>
+                <p>Display the total number of devices here.</p>
+            </div> -->
+
+            <!-- Widget for Scheduled Jobs -->
+            <!-- <div class="widget" onclick="window.location.href='/scheduled-jobs-page'">
+                <i class="fas fa-calendar-alt widget-icon"></i>
+                <h3>Scheduled Jobs</h3>
+                <p>Display the number of scheduled jobs here.</p>
+            </div> -->
+
+            <!-- Widget for Sites-->
+            <!-- <div class="widget" onclick="window.location.href='/sites-page'">
+                <i class="fas fa-globe widget-icon"></i>
+                <h3>Sites</h3>
+                <p>Display the number of sites here.</p>
+            </div> -->
+
+            <!-- Widget for Types -->
+            <!-- <div class="widget" onclick="window.location.href='/types-page'">
+                <i class="fas fa-cogs widget-icon"></i>
+                <h3>Types</h3>
+                <p>Display the number of types here.</p>
+            </div> -->
+        </div>
+    </br>
+
 
         <!-- Available Devices -->
         <div id="devices-section" style="display: none;">
@@ -500,6 +669,25 @@
                  }, 4000); // Adjust the delay as needed (in milliseconds)
              }
          });
+    </script>
+    <script>
+        function updateTotalTypes() {
+            console.log('Updating backup records...');
+            fetch('/widgets_type')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('total-types').innerText = data.count;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Call the functions to update widget numbers when the page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            updateTotalTypes();
+            // Call similar functions for other widgets here
+        });
     </script>
 </body>
 </html>
