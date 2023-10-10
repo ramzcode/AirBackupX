@@ -22,13 +22,20 @@ db_config = {
     'database': 'passwords_db'
 }
 
-conn = mysql.connector.connect(**db_config)
-cursor = conn.cursor()
-
 def widget_type():
-    cursor = conn.cursor(dictionary=True)
-    #cursor.execute('SELECT name, COUNT(*) as count FROM types GROUP BY name')
-    cursor.execute('SELECT COUNT(*) AS total_count FROM types;')
-    total_types = cursor.fetchone()['total_count']
-    cursor.close()
-    return jsonify(count=total_types)
+    cursor = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute('SELECT COUNT(*) AS total_count FROM types;')
+        total_types = cursor.fetchone()['total_count']
+        return jsonify(count=total_types)
+    except Exception as e:
+        # Handle exceptions, log errors, etc.
+        return jsonify(error=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
