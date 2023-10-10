@@ -17,7 +17,7 @@ from werkzeug.utils import secure_filename
 import logging
 import logging.handlers
 #from routes.widgets import widgets_bp
-from routes.widgets import widget_type
+from routes.widgets import widget_type, widget_device, widget_jobs, widget_site
 
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -62,10 +62,10 @@ def store_client_ip():
     request.client_ip = request.remote_addr
 
 # Register routes using add_url_rule()
-#app.add_url_rule('/widget_device', 'widget_device', widget_device)
-#app.add_url_rule('/widget_site', 'widget_site', widget_site)
+app.add_url_rule('/widgets_device', 'widget_device', widget_device)
+app.add_url_rule('/widgets_site', 'widget_site', widget_site)
 app.add_url_rule('/widgets_type', 'widget_type', widget_type)
-#app.add_url_rule('/widget_backup', 'widget_backup', widget_backup)
+app.add_url_rule('/widgets_jobs', 'widget_jobs', widget_jobs)
 
 # Configure logging
 custom_log_file = 'AirBackupX_messages.log'  # Specify the log file path

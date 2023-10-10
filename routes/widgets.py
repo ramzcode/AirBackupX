@@ -22,6 +22,25 @@ db_config = {
     'database': 'passwords_db'
 }
 
+def widget_device():
+    cursor = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute('SELECT COUNT(*) AS total_count FROM passwords;')
+        total_device = cursor.fetchone()['total_count']
+        return jsonify(count=total_device)
+    except Exception as e:
+        # Handle exceptions, log errors, etc.
+        return jsonify(error=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
+
 def widget_type():
     cursor = None
     try:
@@ -31,6 +50,42 @@ def widget_type():
         cursor.execute('SELECT COUNT(*) AS total_count FROM types;')
         total_types = cursor.fetchone()['total_count']
         return jsonify(count=total_types)
+    except Exception as e:
+        # Handle exceptions, log errors, etc.
+        return jsonify(error=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
+def widget_site():
+    cursor = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute('SELECT COUNT(*) AS total_count FROM groups;')
+        total_groups = cursor.fetchone()['total_count']
+        return jsonify(count=total_groups)
+    except Exception as e:
+        # Handle exceptions, log errors, etc.
+        return jsonify(error=str(e))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
+def widget_jobs():
+    cursor = None
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute('SELECT COUNT(*) AS total_count FROM cron_jobs;')
+        total_jobs = cursor.fetchone()['total_count']
+        return jsonify(count=total_jobs)
     except Exception as e:
         # Handle exceptions, log errors, etc.
         return jsonify(error=str(e))

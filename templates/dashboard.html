@@ -160,14 +160,14 @@
         .widget {
             width: 247px;
             height: 130px;
-            border: 1px solid #ccc;
+            border: 1px solid #050101;
             border-radius: 10px;
             padding: 10px;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: space-around;
             margin-bottom: 25px;
         }
 
@@ -185,19 +185,22 @@
         /* CSS for widget name */
         .widget-name h3 {
             margin-top: 20px;
+            margin-left: 10px;
             font-size: 18px;
         }   
         
         /* CSS for widget number */
         .widget-number p {
             margin-bottom: 10px;
-            font-size: 24px;
-            color: #007bff; /* Example color */
+            margin-left: 10px;
+            font-size: 46px;
+            color: #000000; /* Example color */
         }
 
         /* CSS for widget icon */
         .widget-icon {
             margin-bottom: 10px;
+            margin-right: 10px;
             font-size: 30px;
             text-align: right;
             margin-left: 10px;
@@ -296,7 +299,7 @@
         <!-- Widget Container -->
         <div class="widget-container">
             <!-- Widget for Total Devices -->
-            <div class="widget" onclick="window.location.href='/total-devices-page'">
+            <div class="widget" onclick="showDevices()">
                 <!-- Widget Name (Top Left) -->
                 <div class="widget-name">
                     <h3>Total Devices</h3>
@@ -306,7 +309,7 @@
                 <div class="widget-details">
                     <!-- Number Obtained by Querying Flask Route (Second Row Left) -->
                     <div class="widget-number">
-                        <p id="total-devices-number">Loading...</p>
+                        <p id="total-device">Loading...</p>
                     </div>
                     
                     <!-- Icon (Second Row Right) -->
@@ -317,7 +320,7 @@
             </div>
 
             <!-- Widget for Total Jobs -->
-            <div class="widget" onclick="window.location.href='/total-devices-page'">
+            <div class="widget" onclick="window.location.href='{{ url_for('schedule_cron_job') }}'">
                 <!-- Widget Name (Top Left) -->
                 <div class="widget-name">
                     <h3>Total Jobs</h3>
@@ -327,7 +330,7 @@
                 <div class="widget-details">
                     <!-- Number Obtained by Querying Flask Route (Second Row Left) -->
                     <div class="widget-number">
-                        <p id="total-Jobs">Loading...</p>
+                        <p id="total-jobs">Loading...</p>
                     </div>
                     
                     <!-- Icon (Second Row Right) -->
@@ -353,28 +356,28 @@
                     
                     <!-- Icon (Second Row Right) -->
                     <div class="widget-icon">
-                        <i class="fas fa-globe"></i>
+                        <i class="fas fa-list-alt"></i>
                     </div>
                 </div>
             </div>
 
-            <!-- Widget for Total Backups -->
-            <div class="widget" onclick="window.location.href='/total-devices-page'">
+            <!-- Widget for Total Sites -->
+            <div class="widget" onclick="showGroupManagement()">
                 <!-- Widget Name (Top Left) -->
                 <div class="widget-name">
-                    <h3>Total Backups</h3>
+                    <h3>Total Sites</h3>
                 </div>
                 
                 <!-- Widget Number and Icon (Second Row) -->
                 <div class="widget-details">
                     <!-- Number Obtained by Querying Flask Route (Second Row Left) -->
                     <div class="widget-number">
-                        <p id="total-backup">Loading...</p>
+                        <p id="total-sites">Loading...</p>
                     </div>
                     
                     <!-- Icon (Second Row Right) -->
                     <div class="widget-icon">
-                        <i class="fas fa-database"></i>
+                        <i class="fas fa-sitemap"></i>
                     </div>
                 </div>
             </div>
@@ -683,9 +686,48 @@
             });
         }
 
+        function updateTotalDevice() {
+            console.log('Updating backup records...');
+            fetch('/widgets_device')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('total-device').innerText = data.count;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function updateTotalSites() {
+            console.log('Updating backup records...');
+            fetch('/widgets_site')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('total-sites').innerText = data.count;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function updateTotalJobs() {
+            console.log('Updating backup records...');
+            fetch('/widgets_jobs')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('total-jobs').innerText = data.count;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
         // Call the functions to update widget numbers when the page loads
         window.addEventListener('DOMContentLoaded', () => {
             updateTotalTypes();
+            updateTotalDevice();
+            updateTotalSites();
+            updateTotalJobs();
             // Call similar functions for other widgets here
         });
     </script>
