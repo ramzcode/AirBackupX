@@ -1,0 +1,3 @@
+username,device,encrypted_password,group_name,type
+user1,TESTTTTTTT,hashed_password_1,group1,type1
+user2,OKAAAAAAA,hashed_password_2,group2,type2
