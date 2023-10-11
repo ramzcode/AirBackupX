@@ -17,7 +17,9 @@ from werkzeug.utils import secure_filename
 import logging
 import logging.handlers
 #from routes.widgets import widgets_bp
+import csv
 from routes.widgets import widget_type, widget_device, widget_jobs, widget_site
+from routes.dev_import import upload
 
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -46,6 +48,14 @@ class BackupRecord(db.Model):
     exit_status = db.Column(db.String(50))  # Adjust the data type and length as per your schema
     file_name = db.Column(db.String(255))  # Adjust the data type and length as per your schema
 
+class DeviceRecord(db.Model):
+    __tablename__ = 'passwords'
+    username = db.Column(db.String(255))
+    device = db.Column(db.String(255), primary_key=True, unique=True)
+    encrypted_password = db.Column(db.String(255))
+    group_name = db.Column(db.String(255))
+    type = db.Column(db.String(255))
+
 Session(app)
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -55,6 +65,10 @@ login_manager.login_view = 'login'
 # Initialize Flask-Bcrypt for password hashing
 bcrypt = Bcrypt(app)
 
+
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'csv'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Middleware to store the client IP in the thread-local storage
 @app.before_request
@@ -66,6 +80,7 @@ app.add_url_rule('/widgets_device', 'widget_device', widget_device)
 app.add_url_rule('/widgets_site', 'widget_site', widget_site)
 app.add_url_rule('/widgets_type', 'widget_type', widget_type)
 app.add_url_rule('/widgets_jobs', 'widget_jobs', widget_jobs)
+app.add_url_rule('/upload', 'upload', upload, methods=['POST'])
 
 # Configure logging
 custom_log_file = 'AirBackupX_messages.log'  # Specify the log file path
@@ -271,8 +286,9 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('login'))
+    #flash('You have been logged out.', 'info')
+    flash_message = 'You have been logged out'
+    return redirect(url_for('login', flash_message=flash_message))
 
 # Define your local backup directory here
 local_directory = '/Users/ram/Downloads/AirBackupX/Backups'  # Replace with the path to your local directory
@@ -437,10 +453,25 @@ def decrypt_password(encrypted_password):
 
 # Function to list available device names
 def list_devices():
-    cursor.execute('SELECT device FROM passwords')
-    results = cursor.fetchall()
-    devices = [result[0] for result in results]
-    return devices
+#    cursor = None
+#    try:
+#        conn = mysql.connector.connect(**db_config)
+#        cursor = conn.cursor()
+#        cursor.execute('SELECT device FROM passwords')
+#        results = cursor.fetchall()
+#        devices = [result[0] for result in results]
+#        return devices
+#    except Exception as e:
+#        # Handle exceptions, log errors, etc.
+#        return "error"
+#    finally:
+#        if cursor:
+#            cursor.close()
+#        if conn and conn.is_connected():
+#            conn.close()
+#def list_devices():
+    devices = DeviceRecord.query.all()
+    return [device.device for device in devices]
 
 # Function to list available groups
 def list_groups():
@@ -1040,7 +1071,52 @@ def fetch_backup_records():
     backup_records = list_backup_records()
     return jsonify(backup_records)
 
+@app.route('/upload_link')
+def upload_link():
+    return render_template('upload.html')
 
+#def allowed_file(filename):
+#    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+#
+#@app.route('/upload', methods=['POST'])
+#def upload_file():
+#    if 'csv_file' not in request.files:
+#        # No file part
+#        return redirect(request.url)
+#    file = request.files['csv_file']
+#    if file.filename == '':
+#        # No selected file
+#        return redirect(request.url)
+#    if file and allowed_file(file.filename):
+#        # Secure the filename and save it to the uploads folder
+#        filename = secure_filename(file.filename)
+#        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#        file.save(file_path)
+#        # Process the uploaded CSV file
+#        process_csv(file_path)
+#        db.session.commit()
+#        db.session.close()
+#        flash("File uploaded and processed successfully.", 'success')
+#        return redirect(url_for('dashboard')) 
+#    vlse:
+#        # Invalid file type
+#        return "Invalid file type. Please upload a CSV file."
+#
+#def process_csv(file_path):
+#    with open(file_path, 'r') as file:
+#        csv_reader = csv.DictReader(file)
+#        for row in csv_reader:
+#            username = row['username']
+#            device = row['device']
+#            password = row['encrypted_password']
+#            encrypted_password = encrypt_password(password)
+#            group_name = row['group_name']
+#            type = row['type']
+#            new_record = DeviceRecord(username=username, device=device, encrypted_password=encrypted_password, group_name=group_name, type=type)
+#            db.session.add(new_record)
+#            #db.session.commit()
+#            #db.session.close()
+#    os.remove(file_path)  # Remove the uploaded CSV file after processing
 
 if __name__ == '__main__':
     #app.run(debug=True)
