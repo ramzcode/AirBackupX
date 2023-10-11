@@ -286,9 +286,8 @@ def login():
 @login_required
 def logout():
     logout_user()
-    #flash('You have been logged out.', 'info')
-    flash_message = 'You have been logged out'
-    return redirect(url_for('login', flash_message=flash_message))
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
 
 # Define your local backup directory here
 local_directory = '/Users/ram/Downloads/AirBackupX/Backups'  # Replace with the path to your local directory
