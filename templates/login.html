@@ -22,6 +22,27 @@
             margin-top: 50px;
         }
     </style>
+	<!-- Your other head content -->
+    <script>
+        // Function to get URL parameters
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+
+        // Get the flash_message parameter from the URL
+        var flashMessage = getParameterByName('flash_message');
+
+        // If flashMessage is not null or empty, display an alert
+        if (flashMessage) {
+            alert(flashMessage);
+        }
+    </script>
 </head>
 <body>
     <div class="container mt-5">
@@ -31,15 +52,6 @@
                 <h3 class="text-center">Login</h3>
                 <!-- Display Flash Messages -->
 		<!-- Display Flash Messages -->
-                {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                        <div class="alert alert-dismissible">
-                            {% for message in messages %}
-                                <div class="alert-success">{{ message }}</div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-		    {% endwith %}
                 <form method="POST">
                     <div class="form-group">
                         <label for="username">Username:</label>
