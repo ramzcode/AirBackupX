@@ -158,8 +158,9 @@
 
         /* CSS for the widgets */
         .widget {
-            width: 247px;
-            height: 130px;
+	    width: 90%; /* Set width to 90% of the parent container */
+            max-width: 215px; /* Set maximum width to 300 pixels */
+	    height: 130px;
             border: 1px solid #050101;
             border-radius: 10px;
             padding: 10px;
@@ -169,6 +170,7 @@
             flex-direction: column;
             justify-content: space-around;
             margin-bottom: 25px;
+	    margin-right: 6px;
         }
 
         .widget:hover {
@@ -179,7 +181,7 @@
         .widget-container {
             display: flex; /* Use flexbox to display widgets side by side */
             justify-content: space-around;
-            flex-wrap: wrap
+            flex-wrap: nowrap
         }
 
         /* CSS for widget name */

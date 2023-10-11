@@ -25,7 +25,7 @@ app.config['SESSION_PERMANENT'] = False  # Session will expire when the browser 
 app.config['SESSION_USE_SIGNER'] = True  # Session data is signed for security
 app.config['SESSION_KEY_PREFIX'] = 'your_session_prefix'  # Replace with your own prefix
 app.secret_key = 'your_secret_key'  # Change this to a strong, random value
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:hack@127.0.0.1/passwords_db'  # Replace with your database URL
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:hack@127.0.0.1/passwords_db'  # Replace with your database URL
 db = SQLAlchemy(app)
 
 # Register the widgets blueprint
