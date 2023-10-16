@@ -23,7 +23,7 @@
             {% endfor %}
         </select><br>
         <label for="new_value">New Value:</label>
-        <input type="text" id="new_value" name="new_value"><br>
+        <input type="text" id="new_value" name="new_value" required><br>
         <button type="submit">Update Config</button>
     </form>
     <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back</a>
