@@ -1,0 +1,52 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Settings</title>
+</head>
+<body>
+    <h1>Configuration Settings</h1>
+    <form action="/update" method="post">
+	<label for="section">Select Section:</label>
+        <select id="section" name="section">
+            {% for section_key in config.keys() %}
+                <option value="{{ section_key }}" {% if section_selected == section_key %}selected{% endif %}>{{ section_key }}</option>
+            {% endfor %}
+        </select><br>
+        
+        <label for="key">Select Key:</label>
+        <select id="key" name="key">
+            {% for key in selected_section_keys %}
+                <option value="{{ key }}">{{ key }}</option>
+            {% endfor %}
+        </select><br>
+        <label for="new_value">New Value:</label>
+        <input type="text" id="new_value" name="new_value"><br>
+        <button type="submit">Update Config</button>
+    </form>
+    <script>
+        // JavaScript to dynamically update the keys dropdown based on the selected section
+        var sectionDropdown = document.getElementById('section');
+        var keyDropdown = document.getElementById('key');
+    
+        sectionDropdown.addEventListener('change', function() {
+            var selectedSection = sectionDropdown.value;
+            keyDropdown.innerHTML = ''; // Clear existing options
+    
+            // Populate keys based on the selected section
+            var keys = JSON.parse('{{ config | tojson | safe }}')[selectedSection];
+            for (var key in keys) {
+                if (keys.hasOwnProperty(key)) {
+                    var option = document.createElement('option');
+                    option.value = key;
+                    option.text = key;
+                    keyDropdown.appendChild(option);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
