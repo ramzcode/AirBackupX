@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMTP Configuration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        .form-group input[type="submit"] {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>SMTP Configuration</h2>
+        <form action="/update_smtp" method="post">
+            <div class="form-group">
+                <label for="smtp_server">SMTP Server:</label>
+                <input type="text" id="smtp_server" name="smtp_server" required>
+            </div>
+            <div class="form-group">
+                <label for="smtp_port">SMTP Port:</label>
+                <input type="text" id="smtp_port" name="smtp_port" required>
+            </div>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save Configuration">
+            </div>
+        </form>
+    </div>
+    <div class="container">
+        <h2>Test Email</h2>
+        <form action="/send_email" method="post">
+            <div class="form-group">
+                <label for="receiver_email">Receiver Email:</label>
+                <input type="email" id="receiver_email" name="receiver_email" required>
+            </div>
+            <div class="form-group">
+                <label for="subject">Subject:</label>
+                <input type="text" id="subject" name="subject" required>
+            </div>
+            <div class="form-group">
+                <label for="message_body">Message Body:</label>
+                <textarea id="message_body" name="message_body" rows="4" required></textarea>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Send Email">
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+

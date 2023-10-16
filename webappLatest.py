@@ -21,6 +21,7 @@ import csv
 #from routes.widgets import widget_type, widget_device, widget_jobs, widget_site
 from routes.widgets import fetch_widgets_data
 from routes.dev_import import upload
+from routes.smtp_config import smtp_config_ui, update_smtp, send_email
 from config.config  import CONFIG
 
 app = Flask(__name__)
@@ -79,9 +80,9 @@ def store_client_ip():
 
 # Register routes using add_url_rule()
 #app.add_url_rule('/widgets_device', 'widget_device', widget_device)
-#app.add_url_rule('/widgets_site', 'widget_site', widget_site)
-#app.add_url_rule('/widgets_type', 'widget_type', widget_type)
-#app.add_url_rule('/widgets_jobs', 'widget_jobs', widget_jobs)
+app.add_url_rule('/smtp_config_ui', 'smtp_config_ui', smtp_config_ui)
+app.add_url_rule('/update_smtp', 'update_smtp', update_smtp, methods=['POST'])
+app.add_url_rule('/send_email', 'send_email', send_email, methods=['POST'])
 app.add_url_rule('/fetch_widgets_data', 'fetch_widgets_data', fetch_widgets_data)
 app.add_url_rule('/upload', 'upload', upload, methods=['POST'])
 
@@ -382,6 +383,16 @@ cursor.execute('''
         device VARCHAR(255) UNIQUE,
         encrypted_password BLOB
     )
+''')
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS smtp_config (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        smtp_server VARCHAR(255),
+        smtp_port INT,
+        username VARCHAR(255) UNIQUE,
+        encrypted_password BLOB
+);
 ''')
 
 cursor.execute('''

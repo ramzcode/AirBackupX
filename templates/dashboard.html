@@ -11,6 +11,7 @@
     <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
     <title>AirBackupX</title>
     <!-- Include Bootstrap CSS -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -244,6 +245,7 @@
             <a href="{{ url_for('explorer') }}"><i class="fas fa-database"></i> <span>DataStore</span></a>
             <a href="{{ url_for('backup_records') }}"><i class='fas fa-lightbulb' style='color:while'></i> <span>Events</span></a>
             <a href="{{ url_for('config_ui') }}"><i class='fas fa-cog' style='color:while'></i> <span>Config</span></a>
+            <a href="{{ url_for('smtp_config_ui') }}"><i class='fas fa-bell' style='color:while'></i> <span>Notifications</span></a>
             <a href="{{ url_for('upload_link') }}"><i class='fas fa-file-import' style='color:while'></i> <span>Import</span></a>
             <a href="{{ url_for('logout') }}"><i class="fa fa-sign-out" style="font-size: 25px;"></i> <span>Logout</span></a>
 	    </br>
