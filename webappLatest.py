@@ -20,6 +20,7 @@ import logging.handlers
 import csv
 from routes.widgets import widget_type, widget_device, widget_jobs, widget_site
 from routes.dev_import import upload
+from config.config  import CONFIG
 
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -1074,6 +1075,38 @@ def fetch_backup_records():
 @app.route('/upload_link')
 def upload_link():
     return render_template('upload.html')
+
+@app.route('/config_ui')
+def config_ui():
+    section_selected = request.args.get('section', 'section1')  # Default to section1 if not provided
+    selected_section_keys = CONFIG.get(section_selected, {}).keys()  # Get keys of the selected section or an empty list if not found
+    return render_template('config.html', config=CONFIG, section_selected=section_selected, selected_section_keys=selected_section_keys)
+
+@app.route('/config_update', methods=['POST'])
+def config_update():
+    section = request.form['section']
+    key = request.form['key']
+    new_value = request.form['new_value']
+
+    # Read the existing Python configuration file
+    with open('config/config.py', 'r') as py_file:
+        python_code = py_file.read()
+
+    # Extract CONFIG dictionary from the Python code
+    exec(python_code, globals())
+    config_data = globals().get('CONFIG', {})
+
+    # Update the nested configuration
+    config_data[section][key] = new_value
+
+    # Convert the updated dictionary to JSON format
+    json_config = json.dumps(config_data, indent=4)
+
+    # Write the updated JSON data back to the Python configuration file
+    with open('config/config.py', 'w') as py_file:
+        py_file.write(f'CONFIG = {json_config}')
+
+    return redirect('/config_ui')
 
 #def allowed_file(filename):
 #    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
