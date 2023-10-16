@@ -243,7 +243,7 @@
             <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> <span>Profile</span></a>
             <a href="{{ url_for('explorer') }}"><i class="fas fa-database"></i> <span>DataStore</span></a>
             <a href="{{ url_for('backup_records') }}"><i class='fas fa-lightbulb' style='color:while'></i> <span>Events</span></a>
-            <a href="{{ url_for('config_ui') }}"><i class='fa fa-edit' style='color:while'></i> <span>Config</span></a>
+            <a href="{{ url_for('config_ui') }}"><i class='fas fa-cog' style='color:while'></i> <span>Config</span></a>
             <a href="{{ url_for('upload_link') }}"><i class='fas fa-file-import' style='color:while'></i> <span>Import</span></a>
             <a href="{{ url_for('logout') }}"><i class="fa fa-sign-out" style="font-size: 25px;"></i> <span>Logout</span></a>
 	    </br>
@@ -677,7 +677,7 @@
              }
          });
     </script>
-    <script>
+ <!--   <script>
         function updateTotalTypes() {
             console.log('Updating backup records...');
             fetch('/widgets_type')
@@ -733,6 +733,27 @@
             updateTotalSites();
             updateTotalJobs();
             // Call similar functions for other widgets here
+        });
+ </script>-->
+    <script>
+        function updateWidgets() {
+            console.log('Updating widgets...');
+            fetch('/fetch_widgets_data')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('total-types').innerText = data.types_count;
+                document.getElementById('total-device').innerText = data.device_count;
+                document.getElementById('total-sites').innerText = data.groups_count;
+                document.getElementById('total-jobs').innerText = data.jobs_count;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    
+        // Call the function to update widget numbers when the page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            updateWidgets();
         });
     </script>
 </body>

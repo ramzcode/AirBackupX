@@ -18,7 +18,8 @@ import logging
 import logging.handlers
 #from routes.widgets import widgets_bp
 import csv
-from routes.widgets import widget_type, widget_device, widget_jobs, widget_site
+#from routes.widgets import widget_type, widget_device, widget_jobs, widget_site
+from routes.widgets import fetch_widgets_data
 from routes.dev_import import upload
 from config.config  import CONFIG
 
@@ -77,10 +78,11 @@ def store_client_ip():
     request.client_ip = request.remote_addr
 
 # Register routes using add_url_rule()
-app.add_url_rule('/widgets_device', 'widget_device', widget_device)
-app.add_url_rule('/widgets_site', 'widget_site', widget_site)
-app.add_url_rule('/widgets_type', 'widget_type', widget_type)
-app.add_url_rule('/widgets_jobs', 'widget_jobs', widget_jobs)
+#app.add_url_rule('/widgets_device', 'widget_device', widget_device)
+#app.add_url_rule('/widgets_site', 'widget_site', widget_site)
+#app.add_url_rule('/widgets_type', 'widget_type', widget_type)
+#app.add_url_rule('/widgets_jobs', 'widget_jobs', widget_jobs)
+app.add_url_rule('/fetch_widgets_data', 'fetch_widgets_data', fetch_widgets_data)
 app.add_url_rule('/upload', 'upload', upload, methods=['POST'])
 
 # Configure logging
