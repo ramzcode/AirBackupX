@@ -41,14 +41,13 @@ def decrypt_password(encrypted_password):
     except InvalidToken:
         return "Invalid token (possibly corrupted or tampered data)"
 
-def test_db_connection(db_ip, db_port, db_username, db_password, db_name):
+def test_db_connection(db_ip, db_port, db_username, db_password):
     try:
         connection = mysql.connector.connect(
             host=db_ip,
             port=db_port,
             user=db_username,
             password=db_password,
-            database=db_name
         )
 
         if connection.is_connected():
@@ -72,6 +71,19 @@ def setup1():
         # Test the database connection
         if test_db_connection(db_ip, db_port, db_username, db_password):
             # Connect to MySQL/MariaDB database
+            dbinit_config = {
+                'host': db_ip,
+                'user': db_username,
+                'port': db_port,
+                'password': db_password,
+            }
+            
+            conn = mysql.connector.connect(**dbinit_config)
+            cursor = conn.cursor()
+
+            cursor.execute("CREATE DATABASE IF NOT EXISTS airbackupx")
+            conn.commit()
+
             db_config = {
                 'host': db_ip,
                 'user': db_username,
@@ -79,11 +91,9 @@ def setup1():
                 'password': db_password,
                 'database': 'airbackupx'
             }
-            
+
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor()
-
-            cursor.execute("CREATE DATABASE IF NOT EXISTS airbackupx")
             
             # Create the 'passwords' table if it doesn't exist
             cursor.execute('''
@@ -156,14 +166,8 @@ def setup1():
                 )
             ''')
             
-            
-            #cursor.execute('''
-            #    ALTER TABLE passwords
-            #    ADD COLUMN type VARCHAR(255)
-            #''')
-            
             conn.commit()
-            conn.close()
+            #conn.close()
 
             # Read the existing Python configuration file
             with open('config/config.py', 'r') as py_file:
@@ -173,11 +177,11 @@ def setup1():
             exec(python_code, globals())
             config_data = globals().get('CONFIG', {})
             # Update the nested configuration
-            config_data[Database][host] = db_ip
-            config_data[Database][port] = db_port
-            config_data[Database][username] = db_username
-            config_data[Database][password] = db_password
-            config_data[Database][database] = db_database
+            config_data['Database']['host'] = db_ip
+            config_data['Database']['port'] = db_port
+            config_data['Database']['username'] = db_username
+            config_data['Database']['password'] = db_password
+            config_data['Database']['database'] = 'airbackupx'
         
             # Convert the updated dictionary to JSON format
             json_config = json.dumps(config_data, indent=4)
@@ -201,7 +205,7 @@ def setup2():
     if request.method == 'POST':
         # Key Management
         flask_secret_key = secrets.token_hex(24)  # Auto-generate session secret
-        flask_session_suffix = airbackupx
+        flask_session_suffix = 'airbackupx'
 
         # Admin Password
         admin_password = request.form['admin_password']
@@ -209,12 +213,13 @@ def setup2():
 
         # Fernet Key Management
         fernet_key = request.form['fernet_key']
-        if len(fernet_key) < 24:
-            return render_template('setup2.html', error_message='Encryption key must be at least 24 characters long.')
-
-        # Save Fernet Key to a file (for example, fernet_key.txt)
-        with open('fernet_key.txt', 'w') as key_file:
-            key_file.write(encryption_key.key)
+        print('Encrypt Key Generated and saved')
+#        if len(fernet_key) < 24:
+#            return render_template('setup2.html', error_message='Encryption key must be at least 24 characters long.')
+#
+#        # Save Fernet Key to a file (for example, fernet_key.txt)
+#        with open('encryption_key.key', 'w') as key_file:
+#            key_file.write(fernet_key)
 
         # Backup Path Validation
         backup_path = request.form['backup_path']
@@ -224,6 +229,23 @@ def setup2():
             return render_template('setup2.html', error_message='Airbackupx user does not have write permission in the provided path.')
         
 
+        # Database connection configuration
+        db_config = {
+            'host': CONFIG['Database']['host'],
+            'port': CONFIG['Database']['port'],
+            'username': CONFIG['Database']['username'],
+            'password': CONFIG['Database']['password'],
+            'database': CONFIG['Database']['database']
+        }
+
+
+        password_hash = generate_password_hash(admin_password)
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO users (username, password_hash, emailid) VALUES (%s, %s, %s)', ('admin', password_hash, admin_email))
+        conn.commit()
+        #conn.close()
+    
         # Read the existing Python configuration file
         with open('config/config.py', 'r') as py_file:
             python_code = py_file.read()
@@ -232,16 +254,12 @@ def setup2():
         exec(python_code, globals())
         config_data = globals().get('CONFIG', {})
 
-        password_hash = generate_password_hash(admin_password)
-        cursor.execute('INSERT INTO users (username, password_hash, emailid) VALUES (%s, %s)', ('admin', password_hash, admin_email))
-        conn.commit()
-    
         # Update the nested configuration
-        config_data[Admin][emailID] = admin_email
-        config_data[Datastore][BackupPath] = backup_path 
-        config_data[Encrypt][flask_enc_key] = fernet_key
-        config_data[FlaskSession][key] = flask_secret_key
-        config_data[FlaskSession][suffix] = flask_session_suffix
+        config_data['Admin']['emailID'] = admin_email
+        config_data['Datastore']['BackupPath'] = backup_path 
+        config_data['Encrypt']['flask_enc_key'] = fernet_key
+        config_data['FlaskSession']['key'] = flask_secret_key
+        config_data['FlaskSession']['suffix'] = flask_session_suffix
     
         # Convert the updated dictionary to JSON format
         json_config = json.dumps(config_data, indent=4)
@@ -254,8 +272,9 @@ def setup2():
 
         # If all checks pass, proceed to Page 3
         return redirect('/setup3')
-
-    return render_template('page2.html')
+    
+    encrypt_key = get_or_generate_key()
+    return render_template('setup2.html', key=encrypt_key)
 
 #@app.route('/smtp_config')
 def setup3():
@@ -271,17 +290,46 @@ def setup3():
         # Connect to the database
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
-    
+
         # Update SMTP data in the database
-        query = "INSERT INTO smtp_config (id, smtp_server, smtp_port, username, encrypted_password) VALUES (1, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE"
-        data = (smtp_server, smtp_port, username, encrypted_password)
+        query = """
+            INSERT INTO smtp_config (id, smtp_server, smtp_port, username, encrypted_password)
+            VALUES (%s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+            smtp_server = VALUES(smtp_server),
+            smtp_port = VALUES(smtp_port),
+            username = VALUES(username),
+            encrypted_password = VALUES(encrypted_password)
+        """
+        data = (1, smtp_server, smtp_port, username, encrypted_password)
         cursor.execute(query, data)
     
         # Commit changes and close connection
         conn.commit()
         conn.close()
+        
+        # Read the existing Python configuration file
+        with open('config/config.py', 'r') as py_file:
+            python_code = py_file.read()
+
+        # Extract CONFIG dictionary from the Python code
+        exec(python_code, globals())
+        config_data = globals().get('CONFIG', {})
+
+        # Update the nested configuration
+        config_data['SMTP']['server'] = smtp_server
+        config_data['SMTP']['port'] = smtp_port
+        config_data['SMTP']['username'] = username
+
+        # Convert the updated dictionary to JSON format
+        json_config = json.dumps(config_data, indent=4)
+
+        # Write the updated JSON data back to the Python configuration file
+        with open('config/config.py', 'w') as py_file:
+            py_file.write(f'CONFIG = {json_config}')
+
         flash("SMTP Configuration Saved!!", 'success')
-        return redirect(url_for('/setup4'))
+        return redirect('/setup4')
     
     return render_template('smtp_step1_config.html')
 
@@ -334,10 +382,10 @@ def setup4():
                     server.send_message(msg)
                     #return "Email sent successfully!"
                     flash("Email sent successfully!", 'success')
-                    return redirect(url_for('/setup4'))
+                    return redirect('/setup4')
                 except Exception as e:
                     flash("SMTP Failure", 'error')
-                    return redirect(url_for('/setup4'))
+                    return redirect('/setup4')
                     #return f"Error: Unable to send email. {e}"
                 finally:
                     # Close the SMTP server connection

@@ -1,27 +1,27 @@
 CONFIG = {
     "Admin": {
-        "emailID": "dummy",
+        "emailID": "ponnurangam.h@gmail.com"
     },
     "Datastore": {
-        "BackupPath": "/dummy",
+        "BackupPath": "/tmp"
     },
     "Encrypt": {
-        "flask_enc_key": "encryption_key.key",
+        "flask_enc_key": "b'RcuXnVW1AfQS3xn9dRJN461Et_1F4vihNOlOOh1h1II='"
     },
     "FlaskSession": {
-        "key": "dummp",
-        "suffix": "dummy"
+        "key": "7f43ba0a51706dfd1b91eb58989f3cb09fd82501e7ac0ee4",
+        "suffix": "airbackupx"
     },
     "SMTP": {
         "server": "dummy",
         "port": "dummy",
-        "username": "dummy",
+        "username": "dummy"
     },
     "Database": {
-        "host": "god.com",
-        "port": "5432",
-        "username": "6",
-        "password": "6",
+        "host": "127.0.0.1",
+        "port": "3306",
+        "username": "root",
+        "password": "hack",
         "database": "airbackupx"
     }
 }

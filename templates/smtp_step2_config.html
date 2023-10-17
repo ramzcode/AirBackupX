@@ -61,7 +61,7 @@
     </div>
     <div class="container">
         <h2>Test Email</h2>
-        <form action="/setup44" method="post">
+        <form id="setupForm" action="/setup4" method="post">
             <div class="form-group">
                 <label for="receiver_email">Receiver Email:</label>
                 <input type="email" id="receiver_email" name="receiver_email" required>
@@ -75,13 +75,18 @@
                 <textarea id="message_body" name="message_body" rows="4" required></textarea>
             </div>
             <div class="form-group">
-		 <button type="button" onclick="TestEmail()">Test EMAIL</button>
-                 <button type="button" onclick="completeSetup()">Complete Setup</button>
 		 <!-- Hidden input field to store the selected action -->
         	 <input type="hidden" name="action" id="actionInput" value="">
+		 <button type="button" onclick="TestEmail()">Test EMAIL</button>
+                 <button type="button" onclick="completeSetup()">Complete Setup</button>
             </div>
         </form>
     </div>
+
+    <!-- Bootstrap JavaScript, jQuery, and Popper.js -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
     <script>
         function TestEmail() {
             // Set the action to "perform_setup" and submit the form

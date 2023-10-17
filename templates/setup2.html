@@ -11,9 +11,10 @@
     <form action="/setup2" method="post">
         <!-- Admin Password -->
         <label>Admin Password:</label> <input type="password" name="admin_password" required><br>
+        <label>Admin EmailID:</label> <input type="email" name="admin_email" required><br>
 
         <!-- Fernet Key Management -->
-        <label>Encryption Key (minimum 24 characters):</label> <input type="password" name="fernet_key" required><br>
+        <label>Encryption Key (keep safe for future Recovery):</label> <input type="text" name="fernet_key" value="{{ key }}" readonly><br>
 
         <!-- Backup Path -->
         <label>Backup Path:</label> <input type="text" name="backup_path" required><br>

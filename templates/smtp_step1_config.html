@@ -36,18 +36,18 @@
 <body>
     <div class="container">
         <h2>SMTP Configuration</h2>
-        <form action="/step3" method="post">
+        <form action="/setup3" method="post">
             <div class="form-group">
                 <label for="smtp_server">SMTP Server:</label>
-                <input type="text" id="smtp_server" name="smtp_server" required value="{{ smtp_config.smtp_server }}">
+                <input type="text" id="smtp_server" name="smtp_server" required>
             </div>
             <div class="form-group">
                 <label for="smtp_port">SMTP Port:</label>
-                <input type="text" id="smtp_port" name="smtp_port" required value="{{ smtp_config.smtp_port }}">
+                <input type="text" id="smtp_port" name="smtp_port" required>
             </div>
             <div class="form-group">
                 <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required value="{{ smtp_config.username }}">
+                <input type="text" id="username" name="username" required>
             </div>
             <div class="form-group">
                 <label for="password">Password:</label>

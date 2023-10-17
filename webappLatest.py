@@ -22,7 +22,7 @@ import csv
 from routes.widgets import fetch_widgets_data
 from routes.dev_import import upload
 from routes.smtp_config import smtp_config_ui, update_smtp, send_email
-from routes.abx_setup import setup1 setup2 setup3 setup4
+from routes.abx_setup import setup1, setup2, setup3, setup4
 from config.config  import CONFIG
 
 app = Flask(__name__)
