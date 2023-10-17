@@ -1,16 +1,27 @@
 CONFIG = {
-    "section1": {
-        "key1": "6",
-        "key2": "value2"
+    "Admin": {
+        "emailID": "dummy",
     },
-    "section2": {
-        "key3": "value3",
-        "key4": "value4"
+    "Datastore": {
+        "BackupPath": "/dummy",
     },
-    "database": {
+    "Encrypt": {
+        "flask_enc_key": "encryption_key.key",
+    },
+    "FlaskSession": {
+        "key": "dummp",
+        "suffix": "dummy"
+    },
+    "SMTP": {
+        "server": "dummy",
+        "port": "dummy",
+        "username": "dummy",
+    },
+    "Database": {
         "host": "god.com",
-        "port": 5432,
+        "port": "5432",
         "username": "6",
-        "password": "6"
+        "password": "6",
+        "database": "airbackupx"
     }
 }

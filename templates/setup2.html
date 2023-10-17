@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Head content -->
+</head>
+<body>
+    <h1>Page 2: Configuration</h1>
+    {% if error_message %}
+    <p style="color: red;">{{ error_message }}</p>
+    {% endif %}
+    <form action="/setup2" method="post">
+        <!-- Admin Password -->
+        <label>Admin Password:</label> <input type="password" name="admin_password" required><br>
+
+        <!-- Fernet Key Management -->
+        <label>Encryption Key (minimum 24 characters):</label> <input type="password" name="fernet_key" required><br>
+
+        <!-- Backup Path -->
+        <label>Backup Path:</label> <input type="text" name="backup_path" required><br>
+
+        <input type="submit" value="Continue">
+    </form>
+</body>
+</html>
+

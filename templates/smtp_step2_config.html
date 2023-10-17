@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMTP Configuration</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>SMTP Configuration</h2>
+        <form action="/setup3" method="post">
+            <div class="form-group">
+                <label for="smtp_server">SMTP Server:</label>
+                <input type="text" id="smtp_server" name="smtp_server" required value="{{ smtp_config.smtp_server }}">
+            </div>
+            <div class="form-group">
+                <label for="smtp_port">SMTP Port:</label>
+                <input type="text" id="smtp_port" name="smtp_port" required value="{{ smtp_config.smtp_port }}">
+            </div>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required value="{{ smtp_config.username }}">
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <input type="submit" class="btn btn-primary" value="Save Configuration"> <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back</a>
+
+            </div>
+        </form>
+    </div>
+    <div class="container">
+        <h2>Test Email</h2>
+        <form action="/setup44" method="post">
+            <div class="form-group">
+                <label for="receiver_email">Receiver Email:</label>
+                <input type="email" id="receiver_email" name="receiver_email" required>
+            </div>
+            <div class="form-group">
+                <label for="subject">Subject:</label>
+                <input type="text" id="subject" name="subject" required>
+            </div>
+            <div class="form-group">
+                <label for="message_body">Message Body:</label>
+                <textarea id="message_body" name="message_body" rows="4" required></textarea>
+            </div>
+            <div class="form-group">
+		 <button type="button" onclick="TestEmail()">Test EMAIL</button>
+                 <button type="button" onclick="completeSetup()">Complete Setup</button>
+		 <!-- Hidden input field to store the selected action -->
+        	 <input type="hidden" name="action" id="actionInput" value="">
+            </div>
+        </form>
+    </div>
+    <script>
+        function TestEmail() {
+            // Set the action to "perform_setup" and submit the form
+            document.getElementById("actionInput").value = "test_email";
+            document.getElementById("setupForm").submit();
+        }
+
+        function completeSetup() {
+            // Set the action to "complete_setup" and submit the form
+            document.getElementById("actionInput").value = "complete_setup";
+            document.getElementById("setupForm").submit();
+        }
+    </script>    
+</body>
+</html>
+

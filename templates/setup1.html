@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First-Time Setup</title>
+</head>
+<body>
+    <h1>First-Time Setup</h1>
+    {% if error_message %}
+    <p style="color: red;">{{ error_message }}</p>
+    {% endif %}
+    <form action="setup1" method="post">
+        <!-- Database Configuration -->
+        DB IP: <input type="text" name="db_ip" required><br>
+        Port: <input type="text" name="db_port" required><br>
+        Username: <input type="text" name="db_username" required><br>
+        Password: <input type="password" name="db_password" required><br>
+        Database Name: <input type="text" name="db_name" required><br>
+
+        <input type="submit" value="Test Connection and Proceed">
+    </form>
+</body>
+</html>
+
