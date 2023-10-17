@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMTP Configuration</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -30,15 +31,6 @@
             padding: 8px;
             font-size: 16px;
         }
-
-        .form-group input[type="submit"] {
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 18px;
-        }
     </style>
 </head>
 <body>
@@ -47,22 +39,23 @@
         <form action="/update_smtp" method="post">
             <div class="form-group">
                 <label for="smtp_server">SMTP Server:</label>
-                <input type="text" id="smtp_server" name="smtp_server" required>
+                <input type="text" id="smtp_server" name="smtp_server" required value="{{ smtp_config.smtp_server }}">
             </div>
             <div class="form-group">
                 <label for="smtp_port">SMTP Port:</label>
-                <input type="text" id="smtp_port" name="smtp_port" required>
+                <input type="text" id="smtp_port" name="smtp_port" required value="{{ smtp_config.smtp_port }}">
             </div>
             <div class="form-group">
                 <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" required value="{{ smtp_config.username }}">
             </div>
             <div class="form-group">
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
             </div>
             <div class="form-group">
-                <input type="submit" value="Save Configuration">
+                <input type="submit" class="btn btn-primary" value="Save Configuration"> <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back</a>
+
             </div>
         </form>
     </div>
@@ -82,7 +75,7 @@
                 <textarea id="message_body" name="message_body" rows="4" required></textarea>
             </div>
             <div class="form-group">
-                <input type="submit" value="Send Email">
+                <input type="submit" class="btn btn-primary" value="Send Email">
             </div>
         </form>
     </div>

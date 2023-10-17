@@ -53,7 +53,13 @@ def decrypt_password(encrypted_password):
 
 #@app.route('/smtp_config')
 def smtp_config_ui():
-    return render_template('smtp_config.html')
+    # Connect to the database and retrieve existing SMTP configuration (except password)
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT id, smtp_server, smtp_port, username FROM smtp_config WHERE id = 1")
+    smtp_config = cursor.fetchone()
+    conn.close()
+    return render_template('smtp_config.html', smtp_config=smtp_config)
 
 #@app.route('/update_smtp', methods=['POST'])
 def update_smtp():
