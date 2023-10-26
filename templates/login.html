@@ -13,13 +13,26 @@
     <!-- Include Bootstrap CSS (or your preferred CSS framework) -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+	.centered-content {
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            #background-color: #f1f1f1; /* optional: add background color for better visibility */
+            padding: 6px 0; /* optional: add padding for better spacing */
+        }
+
+	.centered-content p {
+	    margin: 0; /* Reset default margin for <p> tag */
+	    font-size: small;
+	}
         #logo {
             width: 250px; /* Set the width to an appropriate value */
             height: auto; /* Maintain aspect ratio */
             margin: 0 auto;
             display: block;
             margin-bottom: 50px;
-            margin-top: 50px;
+            margin-top: 24px;
         }
 	/* Flash message popup styles */
         .flash-popup {
@@ -132,5 +145,9 @@
          });
     </script>
 </body>
+<footer class="centered-content">
+	<p>&copy; 2022-<span id="currentYear"></span> AirBackupX. All rights reserved to RamzCode</p>
+</footer>
+<script src="{{ url_for('static', filename='currentYear.js') }}"></script>
 </html>
 
