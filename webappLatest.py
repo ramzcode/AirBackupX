@@ -2,11 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 from cryptography.fernet import Fernet, InvalidToken
 import mysql.connector
 import os
 import json
-import cron_descriptor
 from crontab import CronTab
 import uuid
 import subprocess
@@ -24,6 +24,7 @@ from routes.dev_import import upload
 from routes.smtp_config import smtp_config_ui, update_smtp, send_email
 from routes.abx_setup import setup1, setup2, setup3, setup4
 from config.config  import CONFIG
+import traceback
 
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -69,6 +70,16 @@ login_manager.login_view = 'login'
 # Initialize Flask-Bcrypt for password hashing
 bcrypt = Bcrypt(app)
 
+# Function to check database connection
+def check_db_connection():
+    if os.path.exists('setup.lock'):
+        with app.app_context():
+            try:
+                # Attempt to connect to the database
+                result = db.session.execute(text('SELECT 1'))
+                return True
+            except:
+                return False
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'csv'}
@@ -424,85 +435,85 @@ db_config = {
     'password': 'hack',
     'database': 'passwords_db'
 }
+if check_db_connection():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
 
-conn = mysql.connector.connect(**db_config)
-cursor = conn.cursor()
+# # Create the 'passwords' table if it doesn't exist
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS passwords (
+#         username VARCHAR(255),
+#         device VARCHAR(255) UNIQUE,
+#         encrypted_password BLOB
+#     )
+# ''')
 
-# Create the 'passwords' table if it doesn't exist
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS passwords (
-        username VARCHAR(255),
-        device VARCHAR(255) UNIQUE,
-        encrypted_password BLOB
-    )
-''')
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS smtp_config (
+#         id INT PRIMARY KEY AUTO_INCREMENT,
+#         smtp_server VARCHAR(255),
+#         smtp_port INT,
+#         username VARCHAR(255) UNIQUE,
+#         encrypted_password BLOB
+# );
+# ''')
 
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS smtp_config (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        smtp_server VARCHAR(255),
-        smtp_port INT,
-        username VARCHAR(255) UNIQUE,
-        encrypted_password BLOB
-);
-''')
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS groups (
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         name VARCHAR(255) UNIQUE
+#     )
+# ''')
 
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS groups (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) UNIQUE
-    )
-''')
-
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS types (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) UNIQUE
-    )
-''')
-
-
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL
-    )
-''')
-
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS cron_jobs (
-        job_id VARCHAR(255) PRIMARY KEY,
-        site_name VARCHAR(255),
-        script_path VARCHAR(255),
-        minute VARCHAR(10),
-        hour VARCHAR(10),
-        day VARCHAR(10),
-        month VARCHAR(10),
-        day_of_week VARCHAR(10)
-    )
-''')
-
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS backup_records (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        backup_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        device_name VARCHAR(255) NOT NULL,
-        site_name VARCHAR(255) NOT NULL,
-        type VARCHAR(255) NOT NULL,
-        username VARCHAR(255) NOT NULL,
-        exit_status ENUM('failed', 'succeeded') NOT NULL,
-        file_name VARCHAR(255) NOT NULL
-    )
-''')
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS types (
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         name VARCHAR(255) UNIQUE
+#     )
+# ''')
 
 
-#cursor.execute('''
-#    ALTER TABLE passwords
-#    ADD COLUMN type VARCHAR(255)
-#''')
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS users (
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         username VARCHAR(255) UNIQUE NOT NULL,
+#         password_hash VARCHAR(255) NOT NULL
+#     )
+# ''')
 
-conn.commit()
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS cron_jobs (
+#         job_id VARCHAR(255) PRIMARY KEY,
+#         site_name VARCHAR(255),
+#         script_path VARCHAR(255),
+#         minute VARCHAR(10),
+#         hour VARCHAR(10),
+#         day VARCHAR(10),
+#         month VARCHAR(10),
+#         day_of_week VARCHAR(10)
+#     )
+# ''')
+
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS backup_records (
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         backup_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#         device_name VARCHAR(255) NOT NULL,
+#         site_name VARCHAR(255) NOT NULL,
+#         type VARCHAR(255) NOT NULL,
+#         username VARCHAR(255) NOT NULL,
+#         exit_status ENUM('failed', 'succeeded') NOT NULL,
+#         file_name VARCHAR(255) NOT NULL
+#     )
+# ''')
+
+
+# #cursor.execute('''
+# #    ALTER TABLE passwords
+# #    ADD COLUMN type VARCHAR(255)
+# #''')
+
+# conn.commit()
 
 # Function to encrypt a password
 def encrypt_password(password):
@@ -1196,7 +1207,7 @@ def config_update():
 #        db.session.close()
 #        flash("File uploaded and processed successfully.", 'success')
 #        return redirect(url_for('dashboard')) 
-#    vlse:
+#    else:
 #        # Invalid file type
 #        return "Invalid file type. Please upload a CSV file."
 #
@@ -1216,7 +1227,13 @@ def config_update():
 #            #db.session.close()
 #    os.remove(file_path)  # Remove the uploaded CSV file after processing
 
-if __name__ == '__main__':
-    #app.run(debug=True)
-    app.run(host='0.0.0.0', port=3030)
-    conn.close()
+# Check database connection before starting the Flask app
+if check_db_connection():
+    if __name__ == '__main__':
+        #app.run(debug=True)
+        app.run(host='0.0.0.0', port=3030)
+        conn.close()
+else:
+    # Exit the application if the database connection fails
+    print('CRITICAL: Database not accessible, Fix before starting the application')
+    exit(24)
