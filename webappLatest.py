@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, send_from_directory, abort, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, abort, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
@@ -13,26 +13,23 @@ import subprocess
 from datetime import datetime, timedelta
 from flask_bcrypt import Bcrypt
 from werkzeug.security import generate_password_hash, check_password_hash  # Import password hashing function
-from werkzeug.utils import secure_filename
 import logging
 import logging.handlers
 #from routes.widgets import widgets_bp
-import csv
 #from routes.widgets import widget_type, widget_device, widget_jobs, widget_site
 from routes.widgets import fetch_widgets_data
 from routes.dev_import import upload
 from routes.smtp_config import smtp_config_ui, update_smtp, send_email
 from routes.abx_setup import setup1, setup2, setup3, setup4
 from config.config  import CONFIG
-import traceback
 
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = False  # Session will expire when the browser is closed
 app.config['SESSION_USE_SIGNER'] = True  # Session data is signed for security
-app.config['SESSION_KEY_PREFIX'] = 'your_session_prefix'  # Replace with your own prefix
-app.secret_key = 'your_secret_key'  # Change this to a strong, random value
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:hack@127.0.0.1/passwords_db'  # Replace with your database URL
+app.config['SESSION_KEY_PREFIX'] = CONFIG['FlaskSession']['prefix']  # Replace with your own prefix
+app.secret_key = CONFIG['FlaskSession']['key'] # Change this to a strong, random value
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+mysqlconnector://{CONFIG['Database']['username']}:{CONFIG['Database']['password']}@{CONFIG['Database']['host']}/{CONFIG['Database']['database']}"   # Replace with your database URL
 db = SQLAlchemy(app)
 
 # Register the widgets blueprint
@@ -145,23 +142,43 @@ class User(UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+# @app.before_request
+# def check_session_timeout():
+#     # Get the current session's last access time
+#     last_access_time = session.get('last_access_time')
+
+#     if last_access_time is not None:
+#         # Calculate the elapsed time since the last access
+#         elapsed_time = datetime.now() - last_access_time
+
+#         # Set your desired session timeout duration (e.g., 30 minutes)
+#         session_timeout_duration = timedelta(minutes=5)
+
+#         if elapsed_time > session_timeout_duration:
+#             # Session has expired, clear the session and redirect to the login page
+#             session.clear()
+#             flash('Your session has expired due to inactivity.', 'info')
+#             return redirect(url_for('login'))
+#     # Update the last access time for the session
+#     session['last_access_time'] = datetime.now()
+
 @app.before_request
 def check_session_timeout():
-    # Get the current session's last access time
-    last_access_time = session.get('last_access_time')
+    # Exclude certain routes from session timeout check
+    excluded_routes = ['login', 'logout']  # Add more routes if needed
 
-    if last_access_time is not None:
-        # Calculate the elapsed time since the last access
-        elapsed_time = datetime.now() - last_access_time
+    if request.endpoint and request.endpoint not in excluded_routes:
+        last_access_time = session.get('last_access_time')
 
-        # Set your desired session timeout duration (e.g., 30 minutes)
-        session_timeout_duration = timedelta(minutes=5)
+        if last_access_time is not None:
+            elapsed_time = datetime.now() - last_access_time
+            session_timeout_duration = timedelta(minutes=5)
 
-        if elapsed_time > session_timeout_duration:
-            # Session has expired, clear the session and redirect to the login page
-            session.clear()
-            flash('Your session has expired due to inactivity.', 'info')
-            return redirect(url_for('login'))
+            if elapsed_time > session_timeout_duration:
+                session.clear()
+                flash('Your session has expired due to inactivity.', 'info')
+                return redirect(url_for('login'))
+
     # Update the last access time for the session
     session['last_access_time'] = datetime.now()
 
@@ -358,7 +375,7 @@ def logout():
     #return redirect(url_for('login', flash_message='You have been logged out.'))
 
 # Define your local backup directory here
-local_directory = '/Users/ram/Downloads/AirBackupX/Backups'  # Replace with the path to your local directory
+local_directory = CONFIG['Datastore']['BackupPath']  # Replace with the path to your local directory
 
 @app.route('/explorer')
 def explorer():
@@ -430,11 +447,13 @@ cipher_suite = Fernet(encryption_key)
 
 # Connect to MySQL/MariaDB database
 db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'hack',
-    'database': 'passwords_db'
+    'host': CONFIG['Database']['host'],
+    'port': CONFIG['Database']['port'],
+    'user': CONFIG['Database']['username'],
+    'password': CONFIG['Database']['password'],
+    'database': CONFIG['Database']['database']
 }
+
 if check_db_connection():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
@@ -1235,5 +1254,5 @@ if check_db_connection():
         conn.close()
 else:
     # Exit the application if the database connection fails
-    print('CRITICAL: Database not accessible, Fix before starting the application')
+    print('CRITICAL: Database not accessible, Fix and retry.')
     exit(24)

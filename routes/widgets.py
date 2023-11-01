@@ -3,6 +3,7 @@
 #from models.db_models import TypeRecord
 import mysql.connector
 from flask import jsonify
+from config.config  import CONFIG
 
 # widgets_bp = Blueprint('widgets', __name__)
 
@@ -16,10 +17,11 @@ from flask import jsonify
 
 # Connect to MySQL/MariaDB database
 db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'hack',
-    'database': 'passwords_db'
+    'host': CONFIG['Database']['host'],
+    'port': CONFIG['Database']['port'],
+    'user': CONFIG['Database']['username'],
+    'password': CONFIG['Database']['password'],
+    'database': CONFIG['Database']['database']
 }
 
 def fetch_widgets_data():

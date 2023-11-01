@@ -8,8 +8,9 @@ import csv
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
 from cryptography.fernet import Fernet, InvalidToken
+from config.config  import CONFIG
 
-db_url = 'mysql+mysqlconnector://root:hack@127.0.0.1/passwords_db'
+db_url = f"mysql+mysqlconnector://{CONFIG['Database']['username']}:{CONFIG['Database']['password']}@{CONFIG['Database']['host']}/{CONFIG['Database']['database']}"
 
 # Create engine and session
 engine = create_engine(db_url)

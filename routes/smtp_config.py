@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash
 from cryptography.fernet import Fernet, InvalidToken
 import smtplib
 from email.message import EmailMessage
+from config.config  import CONFIG
 
 def get_or_generate_key():
     key_file = 'encryption_key.key'
@@ -29,12 +30,13 @@ def encrypt_password(password):
     encrypted_password = cipher_suite.encrypt(password.encode())
     return encrypted_password
 
-# Database connection configuration
+# Connect to MySQL/MariaDB database
 db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'hack',
-    'database': 'passwords_db'
+    'host': CONFIG['Database']['host'],
+    'port': CONFIG['Database']['port'],
+    'user': CONFIG['Database']['username'],
+    'password': CONFIG['Database']['password'],
+    'database': CONFIG['Database']['database']
 }
 
 # Encrypt the password

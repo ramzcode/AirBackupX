@@ -10,7 +10,7 @@ CONFIG = {
     },
     "FlaskSession": {
         "key": "7f43ba0a51706dfd1b91eb58989f3cb09fd82501e7ac0ee4",
-        "suffix": "airbackupx"
+        "prefix": "airbackupx"
     },
     "SMTP": {
         "server": "dummy",
@@ -22,6 +22,6 @@ CONFIG = {
         "port": "3306",
         "username": "root",
         "password": "hack",
-        "database": "airbackupx"
+        "database": "passwords_db"
     }
 }

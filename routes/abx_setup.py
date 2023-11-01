@@ -205,7 +205,7 @@ def setup2():
     if request.method == 'POST':
         # Key Management
         flask_secret_key = secrets.token_hex(24)  # Auto-generate session secret
-        flask_session_suffix = 'airbackupx'
+        flask_session_prefix = 'airbackupx'
 
         # Admin Password
         admin_password = request.form['admin_password']
@@ -259,7 +259,7 @@ def setup2():
         config_data['Datastore']['BackupPath'] = backup_path 
         config_data['Encrypt']['flask_enc_key'] = fernet_key
         config_data['FlaskSession']['key'] = flask_secret_key
-        config_data['FlaskSession']['suffix'] = flask_session_suffix
+        config_data['FlaskSession']['prefix'] = flask_session_prefix
     
         # Convert the updated dictionary to JSON format
         json_config = json.dumps(config_data, indent=4)

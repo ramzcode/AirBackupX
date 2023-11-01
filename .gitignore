@@ -1,2 +1,4 @@
 __pycache__
 AirBackupX_messages.log.*
+.DS_Store
+flask_session
