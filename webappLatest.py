@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, abort, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_session import Session
+from flask_caching import Cache
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from cryptography.fernet import Fernet, InvalidToken
 import mysql.connector
+from functools import wraps
 import os
 import json
 from crontab import CronTab
@@ -24,6 +26,7 @@ from routes.abx_setup import setup1, setup2, setup3, setup4
 from config.config  import CONFIG
 
 app = Flask(__name__)
+app.config['CACHE_TYPE'] = 'simple'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = False  # Session will expire when the browser is closed
 app.config['SESSION_USE_SIGNER'] = True  # Session data is signed for security
@@ -31,6 +34,7 @@ app.config['SESSION_KEY_PREFIX'] = CONFIG['FlaskSession']['prefix']  # Replace w
 app.secret_key = CONFIG['FlaskSession']['key'] # Change this to a strong, random value
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+mysqlconnector://{CONFIG['Database']['username']}:{CONFIG['Database']['password']}@{CONFIG['Database']['host']}/{CONFIG['Database']['database']}"   # Replace with your database URL
 db = SQLAlchemy(app)
+cache = Cache(app)
 
 # Register the widgets blueprint
 #app.register_blueprint(widgets_bp, url_prefix='/widgets_type')
@@ -199,11 +203,44 @@ def load_user(username):
     # Return None if user_id is not found in the database
     return None
 
+def requires_admin(view_func):
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        user_id = current_user.username
+        # Check if the user's role is in the cache
+        role = cache.get(f'user_role:{user_id}')
+        if role is None:
+            # If not in cache, query the database and store the result in the cache
+            # Connect to MySQL/MariaDB database
+            db_config = {
+                'host': CONFIG['Database']['host'],
+                'port': CONFIG['Database']['port'],
+                'user': CONFIG['Database']['username'],
+                'password': CONFIG['Database']['password'],
+                'database': CONFIG['Database']['database']
+            }
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor()
+            cursor.execute('SELECT role FROM users WHERE username = %s', (user_id,))
+            role = cursor.fetchone()
+            #role = get_user_role(user_id)  # Replace with your database query function
+            cache.set(f'user_role:{user_id}', role, timeout=3600)  # Cache for 1 hour (adjust timeout as needed)
+            # Close the cursor and connection after the operations are done
+            cursor.close()
+            conn.close()
+
+        if role and role[0] == 'admin':
+            return view_func(*args, **kwargs)
+        else:
+            # Redirect to a different route or show an access denied message
+            flash('Unauthorized Access', 'error')
+            return redirect(url_for('dashboard'))
+    return wrapped
 
 @app.route('/profile')
 @login_required
 def profile():
-    return render_template('profile.html', user=current_user)
+    return render_template('profile.html', user=current_user, email=CONFIG['Admin']['emailID'])
 
 
 @app.route('/user_registration', methods=['GET', 'POST'])
@@ -214,6 +251,8 @@ def user_registration():
         if request.method == 'POST':
             username = request.form['username']
             password = request.form['password']
+            emailID = request.form['emailID']
+            role = request.form['role']
             confirm_password = request.form['confirm_password']
 
             # Check if the username and password are provided
@@ -235,7 +274,7 @@ def user_registration():
             else:
                 # Hash and store the user's password
                 password_hash = generate_password_hash(password)
-                cursor.execute('INSERT INTO users (username, password_hash) VALUES (%s, %s)', (username, password_hash))
+                cursor.execute('INSERT INTO users (username, password_hash, emailID, role) VALUES (%s, %s, %s, %s)', (username, password_hash, emailID, role))
                 conn.commit()
 
                 flash('Registration successful! Account Created', 'success')
@@ -600,6 +639,7 @@ def dashboard():
 
 @app.route('/create', methods=['POST'])
 @login_required
+@requires_admin
 def create():
     if request.method == 'POST':
         username = request.form['username']
