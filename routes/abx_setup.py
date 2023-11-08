@@ -136,7 +136,8 @@ def setup1():
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     username VARCHAR(255) UNIQUE NOT NULL,
                     password_hash VARCHAR(255) NOT NULL,
-                    emailid VARCHAR(255) NOT NULL
+                    emailID VARCHAR(255) NOT NULL,
+                    role VARCHAR(255) NOT NULL
                 )
             ''')
             
@@ -242,7 +243,7 @@ def setup2():
         password_hash = generate_password_hash(admin_password)
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO users (username, password_hash, emailid) VALUES (%s, %s, %s)', ('admin', password_hash, admin_email))
+        cursor.execute('INSERT INTO users (username, password_hash, emailID, role) VALUES (%s, %s, %s)', ('admin', password_hash, admin_email, 'admin'))
         conn.commit()
         #conn.close()
     
