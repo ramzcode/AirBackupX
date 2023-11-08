@@ -245,48 +245,49 @@ def profile():
 
 @app.route('/user_registration', methods=['GET', 'POST'])
 @login_required
+@requires_admin
 def user_registration():
-    # Check if the current user's username is "2222"
-    if current_user.username == "2222":
-        if request.method == 'POST':
-            username = request.form['username']
-            password = request.form['password']
-            emailID = request.form['emailID']
-            role = request.form['role']
-            confirm_password = request.form['confirm_password']
+    # # Check if the current user's username is "2222"
+    # if current_user.username == "2222":
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        emailID = request.form['emailID']
+        role = request.form['role']
+        confirm_password = request.form['confirm_password']
 
-            # Check if the username and password are provided
-            if not username or not password or not confirm_password:
-                flash('Both username and password are required.', 'error')
-                return redirect(url_for('user_registration.html'))
+        # Check if the username and password are provided
+        if not username or not password or not confirm_password:
+            flash('Both username and password are required.', 'error')
+            return redirect(url_for('user_registration.html'))
 
-            # Check if the passwords match
-            if password != confirm_password:
-                flash('Passwords do not match. Please enter the same password twice.', 'error')
-                return render_template('user_registration.html')
+        # Check if the passwords match
+        if password != confirm_password:
+            flash('Passwords do not match. Please enter the same password twice.', 'error')
+            return render_template('user_registration.html')
 
-            # Check if the username already exists in the database
-            cursor.execute('SELECT id FROM users WHERE username = %s', (username,))
-            existing_user = cursor.fetchone()
+        # Check if the username already exists in the database
+        cursor.execute('SELECT id FROM users WHERE username = %s', (username,))
+        existing_user = cursor.fetchone()
 
-            if existing_user:
-                flash('Username already exists. Please choose a different username.', 'error')
-            else:
-                # Hash and store the user's password
-                password_hash = generate_password_hash(password)
-                cursor.execute('INSERT INTO users (username, password_hash, emailID, role) VALUES (%s, %s, %s, %s)', (username, password_hash, emailID, role))
-                conn.commit()
+        if existing_user:
+            flash('Username already exists. Please choose a different username.', 'error')
+        else:
+            # Hash and store the user's password
+            password_hash = generate_password_hash(password)
+            cursor.execute('INSERT INTO users (username, password_hash, emailID, role) VALUES (%s, %s, %s, %s)', (username, password_hash, emailID, role))
+            conn.commit()
 
-                flash('Registration successful! Account Created', 'success')
-                # If 'next' is provided in the query string, redirect there, otherwise go to 'dashboard'
-                #next_page = request.args.get('next', None)
-                return redirect(url_for('dashboard'))
-                #return redirect(url_for('login'))
+            flash('Registration successful! Account Created', 'success')
+            # If 'next' is provided in the query string, redirect there, otherwise go to 'dashboard'
+            #next_page = request.args.get('next', None)
+            return redirect(url_for('dashboard'))
+            #return redirect(url_for('login'))
 
-        return render_template('user_registration.html')
-    else:
-        flash('Unauthorized Access', 'error')
-        return redirect(url_for('dashboard'))
+    return render_template('user_registration.html')
+    # else:
+    #     flash('Unauthorized Access', 'error')
+    #     return redirect(url_for('dashboard'))
 
 @app.route('/reset_password', methods=['POST'])
 @login_required
@@ -674,6 +675,7 @@ def create():
 
 @app.route('/retrieve', methods=['POST', 'GET'])
 @login_required
+@requires_admin
 def retrieve():
     if request.method == 'POST':
         device = request.form['device']
@@ -695,6 +697,7 @@ def retrieve():
 
 # Function to edit credentials by device name
 @app.route('/edit/<device>', methods=['POST', 'GET'])
+@requires_admin
 @login_required
 def edit(device):
     cursor.execute('SELECT username FROM passwords WHERE device = %s', (device,))
@@ -727,6 +730,7 @@ def edit(device):
 
 # Function to delete credentials by device name
 @app.route('/delete/<device>', methods=['GET'])
+@requires_admin
 @login_required
 def delete(device):
     try:
@@ -762,6 +766,7 @@ def create_group():
     return redirect(url_for('dashboard'))
 
 @app.route('/delete_group', methods=['GET', 'POST'])
+@requires_admin
 @login_required
 def delete_group():
     groups = list_groups()
@@ -823,6 +828,7 @@ def create_type():
     return redirect(url_for('dashboard'))
 
 @app.route('/delete_type', methods=['GET', 'POST'])
+@requires_admin
 @login_required
 def delete_type():
     types = list_types()
@@ -962,6 +968,7 @@ def edit_cron_job(job_id):
 
 
 @app.route('/delete_cron_job/<job_id>', methods=['GET', 'POST'])
+@requires_admin
 @login_required
 def delete_cron_job(job_id):
     if request.method == 'POST':
@@ -1069,6 +1076,7 @@ def delete_user_by_username(username):
         flash(f"An error occurred while deleting user '{username}': {str(e)}", 'error')
 
 @app.route('/delete_account', methods=['POST'])
+@requires_admin
 @login_required
 def delete_account():
     if request.method == 'POST':
@@ -1108,6 +1116,7 @@ def update_user_password(username, new_password):
 #        return redirect(url_for('dashboard'))
 
 @app.route('/user_management', methods=['GET', 'POST'])
+@requires_admin
 @login_required
 def user_management():
     if current_user.username == "2222":
@@ -1208,10 +1217,13 @@ def fetch_backup_records():
     return jsonify(backup_records)
 
 @app.route('/upload_link')
+@login_required
 def upload_link():
     return render_template('upload.html')
 
 @app.route('/config_ui')
+@requires_admin
+@login_required
 def config_ui():
     section_selected = request.args.get('section', 'section1')  # Default to section1 if not provided
     selected_section_keys = CONFIG.get(section_selected, {}).keys()  # Get keys of the selected section or an empty list if not found
