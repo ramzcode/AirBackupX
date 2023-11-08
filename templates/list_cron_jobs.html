@@ -3,11 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>List Cron Jobs</title>
+    <!-- Favicon -->
+    <!-- <link rel="icon" href="{{ url_for('static', filename='AirBackupX-Favicon.png') }}" type="image/png" sizes="32x32"> -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+    <title>AirBackupX</title>
     <!-- Include Bootstrap CSS -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Include custom CSS -->
+    <style>
+	/* Flash message popup styles */
+    .flash-popup {
+        position: fixed;
+        top: 10px; /* Adjust the top position as needed */
+        right: 10px; /* Adjust the right position as needed */
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        display: none; /* Initially hidden */
+        z-index: 999; /* Ensure it appears on top of other content */
+    }
+	/* Styles for success messages */
+	.flash-popup.success {
+    	    background-color: rgba(0, 255, 0, 0.9); /* Green background for success messages */
+	}
+	.flash-popup.error {
+    	    background-color: rgba(255, 0, 0, 0.9); /* Red background for success messages */
+	}
+        /* Center-align submenu items */
+        .submenu-container {
+            text-align: center;
+        }
+
+	/* Webkit (Chrome, Safari, newer versions of Opera) */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #636465;
+        }
+
+        /* Firefox */
+        scrollbar-width: thin;
+        scrollbar-color: #3498db #f1f1f1;
+
+        /* Internet Explorer */
+        scrollbar-face-color: #3498db;
+        scrollbar-shadow-color: #f1f1f1;
+
+        /* Additional styles for scrollbar track (optional) */
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        scrollbar-track-color: #f1f1f1;
+
+        /* Style submenu items */
+        .submenu-item {
+            cursor: pointer;
+            text-decoration: underline;
+            color: blue;
+            margin: 0 5px; /* Add horizontal margin to separate items */
+            white-space: nowrap; /* Prevent items from wrapping to the next line */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Use ellipsis for longer items */
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            height: 100vh;
+            width: 222px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #333;
+            padding-top: 85px;
+            transition: width 0.3s;
+        }
+
+        .sidebar.collapsed {
+            width: 75px;
+        }
+
+	.sidebar-content {
+    	height: calc(100vh - 80px); /* Adjusted height considering the padding-top */
+    	overflow-y: auto;
+	}
+
+        .sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 15px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            transition: 0.3s;
+        }
+
+        .sidebar a i {
+            background-color: #333;
+            color: #fff;
+            margin-right: 9px;
+            font-size: 21px;
+        }
+
+        .sidebar a span {
+            display: inline;
+        }
+
+        .sidebar.collapsed a span {
+            display: none;
+        }
+
+        .content {
+            margin-top: -32px;
+            margin-left: 250px;
+            padding: 60px;
+            transition: margin-left 0.3s;
+        }
+
+        .content.collapsed {
+            margin-left: 50px;
+        }
+
+        .menu-toggle {
+            position: fixed;
+            top: 48px;
+            left: 16px;
+            background-color: #333;
+            color: #fff;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .logo-container {
+            position: fixed;
+            top: 19px;
+            left: 35px; /* Adjust the left position as needed to separate it from the toggle button */
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed .logo-container {
+            display: none; /* Hide the logo when sidebar is collapsed */
+        }
+
+        #logo {
+            width: 165px; /* Set the width to an appropriate value */
+            height: auto; /* Maintain aspect ratio */
+            margin-left: 14px;
+        }
+
+        /* CSS for the widgets */
+        .widget {
+	    width: 90%; /* Set width to 90% of the parent container */
+            max-width: 215px; /* Set maximum width to 300 pixels */
+	    height: 130px;
+            border: 1px solid #050101;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            margin-bottom: 25px;
+	    margin-right: 6px;
+        }
+
+        .widget:hover {
+            background-color: #f2f2f2;
+        }
+
+        /* CSS for the widget container */
+        .widget-container {
+            display: flex; /* Use flexbox to display widgets side by side */
+            justify-content: space-around;
+            flex-wrap: nowrap
+        }
+
+        /* CSS for widget name */
+        .widget-name h3 {
+            margin-top: 20px;
+            margin-left: 10px;
+            font-size: 18px;
+        }   
+        
+        /* CSS for widget number */
+        .widget-number p {
+            margin-bottom: 10px;
+            margin-left: 10px;
+            font-size: 46px;
+            color: #000000; /* Example color */
+        }
+
+        /* CSS for widget icon */
+        .widget-icon {
+            margin-bottom: 10px;
+            margin-right: 10px;
+            font-size: 30px;
+            text-align: right;
+            margin-left: 10px;
+        }
+
+        /* CSS for the widget details (number and icon) */
+        .widget-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
+    
+    <div class="menu-toggle" onclick="toggleSidebar()">
+        <i class='fas fa-bars mt-1' style='font-size:24px'></i>
+    </div>
+
+    <!-- Logo Container -->
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logoWhiteT.png') }}" id="logo" alt="Logo">
+    </div>
+
+    <div class="sidebar">
+        <div class="sidebar-content">
+                <!-- Sidebar Menu -->
+                <a href="{{ url_for('dashboard') }}"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
+                <a href="{{ url_for('devicemgmt') }}"><i class="fas fa-desktop"></i> <span>Device Management</span></a>
+                <a href="{{ url_for('schedule_cron_job') }}"><i class="fas fa-calendar"></i> <span>Schedule Management</span></a>
+                <a href="{{ url_for('user_management') }}"><i class="fas fa-users"></i> <span>User Management</span></a>
+                <a href="{{ url_for('credretrieve') }}"><i class="fas fa-key"></i> <span>Retrieve Credentials</span></a>
+                <a href="{{ url_for('sitemgmt') }}"><i class="fas fa-sitemap"></i> <span>Site Management</span></a>
+                <a href="{{ url_for('typemgmt') }}"><i class="fas fa-list-alt"></i> <span>Type Management</span></a>
+                <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> <span>Profile</span></a>
+                <a href="{{ url_for('explorer') }}"><i class="fas fa-database"></i> <span>DataStore</span></a>
+                <a href="{{ url_for('backup_records') }}"><i class='fas fa-lightbulb' style='color:while'></i> <span>Events</span></a>
+                <a href="{{ url_for('config_ui') }}"><i class='fas fa-cog' style='color:while'></i> <span>Config</span></a>
+                <a href="{{ url_for('smtp_config_ui') }}"><i class='fas fa-bell' style='color:while'></i> <span>Notifications</span></a>
+                <a href="{{ url_for('upload_link') }}"><i class='fas fa-file-import' style='color:while'></i> <span>Import</span></a>
+                <a href="{{ url_for('logout') }}"><i class="fa fa-sign-out" style="font-size: 25px;"></i> <span>Logout</span></a>
+            </br>
+        </div>
+    </div>
+
+    <div class="content">
+	<!-- Flash Messages-->
+	<!-- Flash Messages -->
+	<!-- Flash Messages -->
+        <div class="flash-popup" id="flash-popup">
+            <!-- Flash messages will appear here -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-dismissible {% if category == 'success' %}alert-success{% else %}alert-danger{% endif %}">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
     <div class="container">
         <h1 class="mt-5">List of Scheduled Cron Jobs</h1>
 	<!-- Display Flash Messages -->
@@ -102,7 +364,39 @@
             }, 5000); // Update job statuses every 5 seconds (for example)
         });
     </script>
+    <script>
+        // JavaScript function to toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const content = document.querySelector('.content');
 
+            sidebar.classList.toggle('collapsed');
+            content.classList.toggle('collapsed');
+
+            // Toggle the visibility of the image next to the toggle button
+            const logoContainer = document.querySelector('.logo-container');
+            logoContainer.style.display = sidebar.classList.contains('collapsed') ? 'none' : 'block';
+
+        }
+    </script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+            // Target the flash popup element
+            var flashPopup = document.getElementById("flash-popup");
+        
+            // Check if the container exists and has messages
+            if (flashPopup && flashPopup.querySelectorAll('.alert').length > 0) {
+                // Show the popup
+                flashPopup.style.display = "block";
+        
+                // Automatically hide the popup after 3000 milliseconds (3 seconds)
+                setTimeout(function() {
+                    flashPopup.style.display = "none";
+                }, 4000); // Adjust the delay as needed (in milliseconds)
+            }
+        });
+   </script>
 </body>
 </html>
 

@@ -235,12 +235,12 @@
 	<div class="sidebar-content">
             <!-- Sidebar Menu -->
             <a href="#" onclick="showDevices()"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a>
-            <a href="#" onclick="showCreateForm()"><i class="fas fa-desktop"></i> <span>Device Management</span></a>
+            <a href="{{ url_for('devicemgmt') }}"><i class="fas fa-desktop"></i> <span>Device Management</span></a>
             <a href="{{ url_for('schedule_cron_job') }}"><i class="fas fa-calendar"></i> <span>Schedule Management</span></a>
             <a href="{{ url_for('user_management') }}"><i class="fas fa-users"></i> <span>User Management</span></a>
-            <a href="#" onclick="showRetrieveForm()"><i class="fas fa-key"></i> <span>Retrieve Credentials</span></a>
-            <a href="#" onclick="showGroupManagement()"><i class="fas fa-sitemap"></i> <span>Site Management</span></a>
-            <a href="#" onclick="showTypeManagement()"><i class="fas fa-list-alt"></i> <span>Type Management</span></a>
+            <a href="{{ url_for('credretrieve') }}"><i class="fas fa-key"></i> <span>Retrieve Credentials</span></a>
+            <a href="{{ url_for('sitemgmt') }}"><i class="fas fa-sitemap"></i> <span>Site Management</span></a>
+            <a href="{{ url_for('typemgmt') }}"><i class="fas fa-list-alt"></i> <span>Type Management</span></a>
             <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> <span>Profile</span></a>
             <a href="{{ url_for('explorer') }}"><i class="fas fa-database"></i> <span>DataStore</span></a>
             <a href="{{ url_for('backup_records') }}"><i class='fas fa-lightbulb' style='color:while'></i> <span>Events</span></a>
@@ -347,7 +347,7 @@
             </div>
 
             <!-- Widget for Total Types -->
-            <div class="widget" onclick="showTypeManagement()">
+            <div class="widget" onclick="window.location.href='{{ url_for('typemgmt') }}'">
                 <!-- Widget Name (Top Left) -->
                 <div class="widget-name">
                     <h3>Total Types</h3>
@@ -368,7 +368,7 @@
             </div>
 
             <!-- Widget for Total Sites -->
-            <div class="widget" onclick="showGroupManagement()">
+            <div class="widget" onclick="window.location.href='{{ url_for('sitemgmt') }}'">
                 <!-- Widget Name (Top Left) -->
                 <div class="widget-name">
                     <h3>Total Sites</h3>
@@ -442,7 +442,7 @@
                 {% endfor %}
             </ul>
 
-	<script>
+	    <script>
             // JavaScript function to filter devices based on search input
             function searchDevices() {
                 // Get the input value
@@ -469,119 +469,6 @@
         </script>
         </div>
 
-        <!-- Create Credentials Form -->
-        <div id="create-form-section" style="display: none;">
-            <h2>Device Management:</h2>
-            <form method="POST" action="/create">
-                <!-- ... (Create form fields) -->
-                <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" class="form-control" id="group_name" name="username" required>
-
-                    <label for="device">Device Name:</label>
-                    <input type="text" class="form-control" id="group_name" name="device" required>
-
-                    <label for="password">Password:</label>
-                    <input type="password" class="form-control" id="group_name" name="password" required>
-
-                    <label for="group">Select Site:</label>
-                    <select name="group" class="form-control" required>
-                        <option value="" disabled selected>Select a site</option>
-                        {% for group in groups %}
-                            <option value="{{ group }}">{{ group }}</option>
-                        {% endfor %}
-                    </select>
-
-                    <label for="type">Select Type:</label>
-                    <select name="type" class="form-control" required>
-                        <option value="" disabled selected>Select a type</option>
-                        {% for type in types %}
-                            <option value="{{ type }}">{{ type }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <input type="submit" class="btn btn-danger" value="Create"><br><br>
-            </form>
-        </div>
-
-        <!-- Retrieve Credentials Form -->
-        <div id="retrieve-form-section" style="display: none;">
-            <h2>Retrieve Credentials:</h2>
-            <form method="POST" action="/retrieve">
-                <!-- ... (Retrieve form fields) -->
-                <form method="POST" action="/retrieve">
-                <label for="device">Device Name:</label>
-                <input type="text" name="device" required><br><br>
-
-                <input type="submit" value="Retrieve">
-            </form>
-
-            <!-- Display retrieved credentials -->
-            {% if username %}
-                <h2>Retrieved Credentials:</h2>
-                <p>Username: {{ username }}</p>
-                <p>Password: {{ password }}</p>
-            {% elif username == "" %}
-                <p>No credentials found for the device.</p>
-            {% endif %}
-            <br>
-        </div>
-
-        <!-- Group Management Section -->
-        <div id="group-management-section" style="display: none;">
-            <h2>Device Site Management:</h2>
-
-            <!-- Create Group Form -->
-            <form method="POST" action="/create_group">
-                <div class="form-group">
-                    <label for="group_name">Site Name:</label>
-                    <input type="text" class="form-control" id="group_name" name="group_name" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Create Site</button>
-            </form>
-
-            <!-- Delete Group Form -->
-            <form method="POST" action="/delete_group">
-                <div class="form-group">
-                    <label for="delete_group">Select Site to Delete:</label>
-                    <select name="delete_group" class="form-control" id="delete-group">
-                        {% for group in groups %}
-                            <option value="{{ group }}">{{ group }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <input type="submit" class="btn btn-danger" value="Delete Site">
-            </form>
-        </div>
-
-        <!-- Type Management Section -->
-        <div id="type-management-section" style="display: none;">
-            <h2>Types Management:</h2>
-
-            <!-- Create Group Form -->
-            <form method="POST" action="/create_type">
-                <div class="form-group">
-                    <label for="type_name">Type Name:</label>
-                    <input type="text" class="form-control" id="type_name" name="type_name" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Create Type</button>
-            </form>
-
-            <!-- Delete Group Form -->
-            <form method="POST" action="/delete_type">
-                <div class="form-group">
-                    <label for="delete_type">Select Type to Delete:</label>
-                    <select name="delete_type" class="form-control" id="delete-type">
-                        {% for type in types %}
-                            <option value="{{ type }}">{{ type }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <input type="submit" class="btn btn-danger" value="Delete type">
-            </form>
-        </div>
-    </div>
-
     <script>
         // JavaScript function to toggle sidebar
         function toggleSidebar() {
@@ -600,42 +487,6 @@
         // JavaScript functions to toggle sections
         function showDevices() {
             document.getElementById('devices-section').style.display = 'block';
-            document.getElementById('create-form-section').style.display = 'none';
-            document.getElementById('retrieve-form-section').style.display = 'none';
-            document.getElementById('group-management-section').style.display = 'none';
-            document.getElementById('type-management-section').style.display = 'none';
-        }
-
-        function showCreateForm() {
-            document.getElementById('devices-section').style.display = 'none';
-            document.getElementById('create-form-section').style.display = 'block';
-            document.getElementById('retrieve-form-section').style.display = 'none';
-            document.getElementById('group-management-section').style.display = 'none';
-            document.getElementById('type-management-section').style.display = 'none';
-        }
-
-        function showRetrieveForm() {
-            document.getElementById('devices-section').style.display = 'none';
-            document.getElementById('create-form-section').style.display = 'none';
-            document.getElementById('retrieve-form-section').style.display = 'block';
-            document.getElementById('group-management-section').style.display = 'none';
-            document.getElementById('type-management-section').style.display = 'none';
-        }
-
-        function showGroupManagement() {
-            document.getElementById('devices-section').style.display = 'none';
-            document.getElementById('create-form-section').style.display = 'none';
-            document.getElementById('retrieve-form-section').style.display = 'none';
-            document.getElementById('group-management-section').style.display = 'block';
-            document.getElementById('type-management-section').style.display = 'none';
-        }
-
-        function showTypeManagement() {
-            document.getElementById('devices-section').style.display = 'none';
-            document.getElementById('create-form-section').style.display = 'none';
-            document.getElementById('retrieve-form-section').style.display = 'none';
-            document.getElementById('group-management-section').style.display = 'none';
-            document.getElementById('type-management-section').style.display = 'block';
         }
 	// Call the function when the page loads
     	window.addEventListener('DOMContentLoaded', showDevices);

@@ -638,6 +638,35 @@ def dashboard():
     types = list_types()
     return render_template('dashboard.html', devices=devices, groups=groups, types=types)
 
+@app.route('/devicemgmt')
+@login_required
+def devicemgmt():
+    devices = list_devices()
+    groups = list_groups()
+    types = list_types()
+    return render_template('devicemgmt.html', devices=devices, groups=groups, types=types)
+
+@app.route('/sitemgmt')
+@login_required
+def sitemgmt():
+    devices = list_devices()
+    groups = list_groups()
+    types = list_types()
+    return render_template('sitemgmt.html', devices=devices, groups=groups, types=types)
+
+@app.route('/typemgmt')
+@login_required
+def typemgmt():
+    devices = list_devices()
+    groups = list_groups()
+    types = list_types()
+    return render_template('typemgmt.html', devices=devices, groups=groups, types=types)
+
+@app.route('/credretrieve')
+@login_required
+def credretrieve():
+    return render_template('credretrieve.html')
+
 @app.route('/create', methods=['POST'])
 @login_required
 @requires_admin

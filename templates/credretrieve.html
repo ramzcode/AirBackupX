@@ -249,11 +249,12 @@
                 <a href="{{ url_for('upload_link') }}"><i class='fas fa-file-import' style='color:while'></i> <span>Import</span></a>
                 <a href="{{ url_for('logout') }}"><i class="fa fa-sign-out" style="font-size: 25px;"></i> <span>Logout</span></a>
             </br>
+            </div>
         </div>
-    </div>
 
     <div class="content">
 	<!-- Flash Messages-->
+	<!-- Flash Messages -->
 	<!-- Flash Messages -->
         <div class="flash-popup" id="flash-popup">
             <!-- Flash messages will appear here -->
@@ -268,123 +269,65 @@
             {% endif %}
             {% endwith %}
         </div>
+    
+    <!-- Retrieve Credentials Form -->
+        <h2>Retrieve Credentials:</h2>
+        <form method="POST" action="/retrieve">
+            <!-- ... (Retrieve form fields) -->
+            <form method="POST" action="/retrieve">
+            <label for="device">Device Name:</label>
+            <input type="text" name="device" required><br><br>
 
-        <script>
-            $(document).ready(function() {
-                    $("#search-input").on("keyup", function() {
-                        var value = $(this).val().toLowerCase();
-                        $("#backup-table tbody tr").filter(function() {
-                            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
-                        });
-                    });
-                });
-        </script>
+            <input type="submit" value="Retrieve">
+        </form>
 
-        <!-- Search Input -->
-        <div class="form-group">
-            <input type="text" class="form-control" id="search-input" placeholder="Search..."> <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back</a>
-        </div>
+        <!-- Display retrieved credentials -->
+        {% if username %}
+            <h2>Retrieved Credentials:</h2>
+            <p>Username: {{ username }}</p>
+            <p>Password: {{ password }}</p>
+        {% elif username == "" %}
+            <p>No credentials found for the device.</p>
+        {% endif %}
+        <br>
 
-          <!-- Table to Display Data -->
-	<table id="backup-table" class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Device Name</th>
-                    <th>Site Name</th>
-                    <th>Type</th>
-                    <th>Username</th>
-                    <th>Backup Status</th>
-                    <th>File Name</th>
-                </tr>
-            </thead>
-            
-            <tbody id="backup-table-body">
-                <!-- Updated data will be inserted here -->
-            </tbody>
-        </table>    
     <script>
-        function updateBackupRecords() {
-            console.log('Updating backup records...');
-            // Fetch new data from the server using Fetch API
-            fetch('/fetch_backup_records')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json(); // Parse the JSON response
-                })
-                .then(data => {
-                    // Reverse the data array to display the latest records at the top
-                    data.reverse();
+        // JavaScript function to toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const content = document.querySelector('.content');
 
-                    // Clear the table body
-                    var tableBody = document.getElementById('backup-table-body');
-                    tableBody.innerHTML = '';
+            sidebar.classList.toggle('collapsed');
+            content.classList.toggle('collapsed');
 
-                    // Append the updated data to the table
-                    data.forEach(record => {
-                        var row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${record.backup_date}</td>
-                            <td>${record.device_name}</td>
-                            <td>${record.site_name}</td>
-                            <td>${record.type}</td>
-                            <td>${record.username}</td>
-                            <td>${record.exit_status}</td>
-                            <td>${record.file_name}</td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                });
+            // Toggle the visibility of the image next to the toggle button
+            const logoContainer = document.querySelector('.logo-container');
+            logoContainer.style.display = sidebar.classList.contains('collapsed') ? 'none' : 'block';
+
         }
-
-        // Periodically update backup records every 5 seconds (5000 milliseconds)
-        setInterval(updateBackupRecords, 5000);
-
-        // Call the function immediately when the page loads
-        window.onload = updateBackupRecords;
     </script>
-<script>
-    // JavaScript function to toggle sidebar
-    function toggleSidebar() {
-        const sidebar = document.querySelector('.sidebar');
-        const content = document.querySelector('.content');
 
-        sidebar.classList.toggle('collapsed');
-        content.classList.toggle('collapsed');
+    <!-- Include Bootstrap JS (optional) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-        // Toggle the visibility of the image next to the toggle button
-        const logoContainer = document.querySelector('.logo-container');
-        logoContainer.style.display = sidebar.classList.contains('collapsed') ? 'none' : 'block';
-
-    }
-</script>
-
-<!-- Include Bootstrap JS (optional) -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-<script>
- document.addEventListener("DOMContentLoaded", function() {
-         // Target the flash popup element
-         var flashPopup = document.getElementById("flash-popup");
-     
-         // Check if the container exists and has messages
-         if (flashPopup && flashPopup.querySelectorAll('.alert').length > 0) {
-             // Show the popup
-             flashPopup.style.display = "block";
-     
-             // Automatically hide the popup after 3000 milliseconds (3 seconds)
-             setTimeout(function() {
-                 flashPopup.style.display = "none";
-             }, 4000); // Adjust the delay as needed (in milliseconds)
-         }
-     });
-</script>
+    <script>
+	 document.addEventListener("DOMContentLoaded", function() {
+             // Target the flash popup element
+             var flashPopup = document.getElementById("flash-popup");
+         
+             // Check if the container exists and has messages
+             if (flashPopup && flashPopup.querySelectorAll('.alert').length > 0) {
+                 // Show the popup
+                 flashPopup.style.display = "block";
+         
+                 // Automatically hide the popup after 3000 milliseconds (3 seconds)
+                 setTimeout(function() {
+                     flashPopup.style.display = "none";
+                 }, 4000); // Adjust the delay as needed (in milliseconds)
+             }
+         });
+    </script>
 </body>
 </html>
