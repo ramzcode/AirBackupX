@@ -1,38 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMTP Configuration</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>First-Time Setup</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
 
         .container {
-            max-width: 400px;
-            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 28px;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .form-group {
             margin-bottom: 15px;
         }
 
-        .form-group label {
-            display: block;
-            font-weight: bold;
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            width: 300px;
+            height: 40px;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #cccccc;
+            border-radius: 5px;
         }
 
-        .form-group input[type="text"],
-        .form-group input[type="password"] {
-            width: 100%;
-            padding: 8px;
-            font-size: 16px;
+        input[type="submit"],
+        button {
+            width: 320px;
+            height: 50px;
+            background-color: #4caf50;
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover,
+        button:hover {
+            background-color: #45a049;
+        }
+
+        p.error-message {
+            color: red;
+            margin-top: 10px;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h2>SMTP Configuration</h2>
@@ -54,11 +99,12 @@
                 <input type="password" id="password" name="password" required>
             </div>
             <div class="form-group">
-                <input type="submit" class="btn btn-primary" value="Save Configuration"> <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back</a>
-
+                <input type="submit" class="btn btn-primary" value="Save Configuration">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back</a>
             </div>
         </form>
     </div>
+
     <div class="container">
         <h2>Test Email</h2>
         <form id="setupForm" action="/setup4" method="post">
@@ -75,10 +121,8 @@
                 <textarea id="message_body" name="message_body" rows="4" required></textarea>
             </div>
             <div class="form-group">
-		 <!-- Hidden input field to store the selected action -->
-        	 <input type="hidden" name="action" id="actionInput" value="">
-		 <button type="button" onclick="TestEmail()">Test EMAIL</button>
-                 <button type="button" onclick="completeSetup()">Complete Setup</button>
+                <button type="button" onclick="TestEmail()">Test Email</button>
+                <button type="button" onclick="completeSetup()">Complete Setup</button>
             </div>
         </form>
     </div>
@@ -99,7 +143,7 @@
             document.getElementById("actionInput").value = "complete_setup";
             document.getElementById("setupForm").submit();
         }
-    </script>    
+    </script>
 </body>
-</html>
 
+</html>
