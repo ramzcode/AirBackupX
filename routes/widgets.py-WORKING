@@ -1,0 +1,37 @@
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from flask import jsonify
+
+
+db_url = 'mysql://root:hack@127.0.0.1/passwords_db'
+
+# Create engine and session
+engine = create_engine(db_url)
+Session = sessionmaker(bind=engine)
+session = Session()
+Base = declarative_base()
+
+class TypeRecord(Base):
+    __tablename__ = 'types'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+# def widget_type():
+#     total_count = session.query(TypeRecord).count()
+#     total_types = {'total_count': total_count}
+#     return jsonify(count=total_types)
+
+# session.close()
+
+def widget_type():
+    try:
+        session = Session()
+        total_count = session.query(TypeRecord).count()
+        total_types = {'total_count': total_count}
+        return jsonify(count=total_types)
+    except Exception as e:
+        # Handle exceptions, log errors, etc.
+        return jsonify(error=str(e))
+    finally:
+        session.close()

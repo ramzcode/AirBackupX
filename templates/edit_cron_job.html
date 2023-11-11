@@ -4,32 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Cron Job</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Include custom CSS if needed -->
+    <style>
+        /* Add custom styles here */
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .narrow-input {
+            max-width: 150px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Edit Cron Job</h1>
-    <form method="POST">
-        <div>
-            <label for="minute">Minute:</label>
-            <input type="text" id="minute" name="minute" required>
-        </div>
-        <div>
-            <label for="hour">Hour:</label>
-            <input type="text" id="hour" name="hour" required>
-        </div>
-        <div>
-            <label for="day">Day:</label>
-            <input type="text" id="day" name="day" required>
-        </div>
-        <div>
-            <label for="month">Month:</label>
-            <input type="text" id="month" name="month" required>
-        </div>
-        <div>
-            <label for="day_of_week">Day of Week:</label>
-            <input type="text" id="day_of_week" name="day_of_week" required>
-        </div>
-        <button type="submit">Update Cron Job</button>
-	<a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
-    </form>
+    <div class="container">
+        <h1 class="text-left">Edit Cron Job</h1>
+        <form method="POST">
+            <div class="form-group">
+                <label for="minute">Minute (0-59):</label>
+                <input type="text" class="form-control form-control-sm narrow-input" id="minute" name="minute" required>
+            </div>
+            <div class="form-group">
+                <label for="hour">Hour (0-23):</label>
+                <input type="text" class="form-control form-control-sm narrow-input" id="hour" name="hour" required>
+            </div>
+            <div class="form-group">
+                <label for="day">Day of the Month (1-31):</label>
+                <input type="text" class="form-control form-control-sm narrow-input" id="day" name="day" required>
+            </div>
+            <div class="form-group">
+                <label for="month">Month (1-12):</label>
+                <input type="text" class="form-control form-control-sm narrow-input" id="month" name="month" required>
+            </div>
+            <div class="form-group">
+                <label for="day_of_week">Day of Week (0-6, where 0 is Sunday):</label>
+                <input type="text" class="form-control form-control-sm narrow-input" id="day_of_week" name="day_of_week" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Update</button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back</a>
+        </form>
+    </div>
+
+    <!-- Include Bootstrap JS and custom JavaScript if needed -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
+

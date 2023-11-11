@@ -1,0 +1,15 @@
+from netmiko import ConnectHandler
+import datetime
+
+def process_device(device_name, username, decrypted_password):
+    try:
+        print(f"Processing device {device_name} with username {username} and {decrypted_password}")
+        # Your IOS-specific logic here
+
+    except Exception as e:
+        print(f"Error processing device {device_name}: {str(e)}")
+        # Log the error if needed
+    finally:
+        print(f"Processing for device {device_name} completed")
+
+    

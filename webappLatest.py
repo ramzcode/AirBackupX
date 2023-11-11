@@ -1,19 +1,68 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, abort, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_session import Session
+from flask_caching import Cache
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 from cryptography.fernet import Fernet, InvalidToken
 import mysql.connector
+from functools import wraps
 import os
-import cron_descriptor
+import json
 from crontab import CronTab
 import uuid
 import subprocess
+from datetime import datetime, timedelta
 from flask_bcrypt import Bcrypt
 from werkzeug.security import generate_password_hash, check_password_hash  # Import password hashing function
-
+import logging
+import logging.handlers
+#from routes.widgets import widgets_bp
+#from routes.widgets import widget_type, widget_device, widget_jobs, widget_site
+from routes.widgets import fetch_widgets_data
+from routes.dev_import import upload
+from routes.smtp_config import smtp_config_ui, update_smtp, send_email
+from routes.abx_setup import setup1, setup2, setup3, setup4
+from config.config  import CONFIG
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Change this to a strong, random valuei
+app.config['CACHE_TYPE'] = 'simple'
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = False  # Session will expire when the browser is closed
+app.config['SESSION_USE_SIGNER'] = True  # Session data is signed for security
+app.config['SESSION_KEY_PREFIX'] = CONFIG['FlaskSession']['prefix']  # Replace with your own prefix
+app.secret_key = CONFIG['FlaskSession']['key'] # Change this to a strong, random value
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+mysqlconnector://{CONFIG['Database']['username']}:{CONFIG['Database']['password']}@{CONFIG['Database']['host']}/{CONFIG['Database']['database']}"   # Replace with your database URL
+db = SQLAlchemy(app)
+cache = Cache(app)
 
+# Register the widgets blueprint
+#app.register_blueprint(widgets_bp, url_prefix='/widgets_type')
+
+# Import routes after creating the Flask app and SQLAlchemy instance
+#from routes import widgets
+# Register the route function with Flask
+
+class BackupRecord(db.Model):
+    __tablename__ = 'backup_records'  # Specify the table name if different from the class name
+    id = db.Column(db.Integer, primary_key=True)
+    backup_date = db.Column(db.DateTime)
+    device_name = db.Column(db.String(255))
+    site_name = db.Column(db.String(255))
+    type = db.Column(db.String(255))  # Adjust the data type and length as per your schema
+    username = db.Column(db.String(255))  # Adjust the data type and length as per your schema
+    exit_status = db.Column(db.String(50))  # Adjust the data type and length as per your schema
+    file_name = db.Column(db.String(255))  # Adjust the data type and length as per your schema
+
+class DeviceRecord(db.Model):
+    __tablename__ = 'passwords'
+    username = db.Column(db.String(255))
+    device = db.Column(db.String(255), primary_key=True, unique=True)
+    encrypted_password = db.Column(db.String(255))
+    group_name = db.Column(db.String(255))
+    type = db.Column(db.String(255))
+
+Session(app)
 # Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -22,6 +71,66 @@ login_manager.login_view = 'login'
 # Initialize Flask-Bcrypt for password hashing
 bcrypt = Bcrypt(app)
 
+# Function to check database connection
+def check_db_connection():
+    if os.path.exists('setup.lock'):
+        with app.app_context():
+            try:
+                # Attempt to connect to the database
+                result = db.session.execute(text('SELECT 1'))
+                return True
+            except:
+                return False
+
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'csv'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Middleware to store the client IP in the thread-local storage
+@app.before_request
+def store_client_ip():
+    request.client_ip = request.remote_addr
+
+# Register routes using add_url_rule()
+#app.add_url_rule('/widgets_device', 'widget_device', widget_device)
+app.add_url_rule('/smtp_config_ui', 'smtp_config_ui', smtp_config_ui)
+app.add_url_rule('/update_smtp', 'update_smtp', update_smtp, methods=['POST'])
+app.add_url_rule('/send_email', 'send_email', send_email, methods=['POST'])
+app.add_url_rule('/fetch_widgets_data', 'fetch_widgets_data', fetch_widgets_data)
+app.add_url_rule('/upload', 'upload', upload, methods=['POST'])
+app.add_url_rule('/setup1', 'setup1', setup1, methods=['POST', 'GET'])
+app.add_url_rule('/setup2', 'setup2', setup2, methods=['POST', 'GET'])
+app.add_url_rule('/setup3', 'setup3', setup3, methods=['POST', 'GET'])
+app.add_url_rule('/setup4', 'setup4', setup4, methods=['POST', 'GET'])
+
+# Configure logging
+custom_log_file = 'AirBackupX_messages.log'  # Specify the log file path
+
+# Create a custom log formatter
+custom_logger = logging.getLogger('custom_logger')
+custom_logger.setLevel(logging.INFO)  # Set the desired logging level for custom logs (e.g., INFO)
+
+# Define the log format for your custom logs (includes IP info)
+custom_log_format = '[%(asctime)s] [%(ip)s] [%(levelname)s]: %(message)s'
+# Configure a custom log handler for your custom logger
+custom_log_handler = logging.handlers.TimedRotatingFileHandler(
+    custom_log_file,
+    when="midnight",
+    interval=1,
+    backupCount=7
+)
+custom_log_handler.setFormatter(logging.Formatter(custom_log_format))
+
+# Set the custom log handler's filter to include IP information
+class IPLogFilter(logging.Filter):
+    def filter(self, record):
+        record.ip = request.client_ip
+        return True
+
+custom_log_handler.addFilter(IPLogFilter())
+
+# Add the custom log handler to the custom logger
+custom_logger.addHandler(custom_log_handler)
 
 # Define the User class for Flask-Login
 
@@ -36,6 +145,47 @@ class User(UserMixin):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+# @app.before_request
+# def check_session_timeout():
+#     # Get the current session's last access time
+#     last_access_time = session.get('last_access_time')
+
+#     if last_access_time is not None:
+#         # Calculate the elapsed time since the last access
+#         elapsed_time = datetime.now() - last_access_time
+
+#         # Set your desired session timeout duration (e.g., 30 minutes)
+#         session_timeout_duration = timedelta(minutes=5)
+
+#         if elapsed_time > session_timeout_duration:
+#             # Session has expired, clear the session and redirect to the login page
+#             session.clear()
+#             flash('Your session has expired due to inactivity.', 'info')
+#             return redirect(url_for('login'))
+#     # Update the last access time for the session
+#     session['last_access_time'] = datetime.now()
+
+@app.before_request
+def check_session_timeout():
+    # Exclude certain routes from session timeout check
+    excluded_routes = ['login', 'logout']  # Add more routes if needed
+
+    if request.endpoint and request.endpoint not in excluded_routes:
+        last_access_time = session.get('last_access_time')
+
+        if last_access_time is not None:
+            elapsed_time = datetime.now() - last_access_time
+            session_timeout_duration = timedelta(minutes=5)
+
+            if elapsed_time > session_timeout_duration:
+                session.clear()
+                flash('Your session has expired due to inactivity.', 'info')
+                return redirect(url_for('login'))
+
+    # Update the last access time for the session
+    session['last_access_time'] = datetime.now()
+
 
 @login_manager.user_loader
 def load_user(username):
@@ -53,29 +203,68 @@ def load_user(username):
     # Return None if user_id is not found in the database
     return None
 
+def requires_admin(view_func):
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        user_id = current_user.username
+        # Check if the user's role is in the cache
+        role = cache.get(f'user_role:{user_id}')
+        if role is None:
+            # If not in cache, query the database and store the result in the cache
+            # Connect to MySQL/MariaDB database
+            db_config = {
+                'host': CONFIG['Database']['host'],
+                'port': CONFIG['Database']['port'],
+                'user': CONFIG['Database']['username'],
+                'password': CONFIG['Database']['password'],
+                'database': CONFIG['Database']['database']
+            }
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor()
+            cursor.execute('SELECT role FROM users WHERE username = %s', (user_id,))
+            role = cursor.fetchone()
+            #role = get_user_role(user_id)  # Replace with your database query function
+            cache.set(f'user_role:{user_id}', role, timeout=3600)  # Cache for 1 hour (adjust timeout as needed)
+            # Close the cursor and connection after the operations are done
+            cursor.close()
+            conn.close()
+
+        if role and role[0] == 'admin':
+            return view_func(*args, **kwargs)
+        else:
+            # Redirect to a different route or show an access denied message
+            flash('Unauthorized Access', 'error')
+            return redirect(url_for('dashboard'))
+    return wrapped
 
 @app.route('/profile')
 @login_required
 def profile():
-    return render_template('profile.html', user=current_user)
+    return render_template('profile.html', user=current_user, email=CONFIG['Admin']['emailID'])
 
-@app.route('/register', methods=['GET', 'POST'])
+
+@app.route('/user_registration', methods=['GET', 'POST'])
 @login_required
-def register():
+@requires_admin
+def user_registration():
+    # # Check if the current user's username is "2222"
+    # if current_user.username == "2222":
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        emailID = request.form['emailID']
+        role = request.form['role']
         confirm_password = request.form['confirm_password']
 
         # Check if the username and password are provided
         if not username or not password or not confirm_password:
             flash('Both username and password are required.', 'error')
-            return redirect(url_for('register'))
+            return redirect(url_for('user_registration.html'))
 
         # Check if the passwords match
         if password != confirm_password:
             flash('Passwords do not match. Please enter the same password twice.', 'error')
-            return render_template('register.html')
+            return render_template('user_registration.html')
 
         # Check if the username already exists in the database
         cursor.execute('SELECT id FROM users WHERE username = %s', (username,))
@@ -86,16 +275,19 @@ def register():
         else:
             # Hash and store the user's password
             password_hash = generate_password_hash(password)
-            cursor.execute('INSERT INTO users (username, password_hash) VALUES (%s, %s)', (username, password_hash))
+            cursor.execute('INSERT INTO users (username, password_hash, emailID, role) VALUES (%s, %s, %s, %s)', (username, password_hash, emailID, role))
             conn.commit()
 
             flash('Registration successful! Account Created', 'success')
             # If 'next' is provided in the query string, redirect there, otherwise go to 'dashboard'
-            next_page = request.args.get('next', None)
-            return redirect(next_page or url_for('dashboard'))
+            #next_page = request.args.get('next', None)
+            return redirect(url_for('dashboard'))
             #return redirect(url_for('login'))
 
-    return render_template('register.html')
+    return render_template('user_registration.html')
+    # else:
+    #     flash('Unauthorized Access', 'error')
+    #     return redirect(url_for('dashboard'))
 
 @app.route('/reset_password', methods=['POST'])
 @login_required
@@ -126,50 +318,156 @@ def reset_password():
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    if os.path.exists('setup.lock'):
+        # Handle login logic
+        if request.method == 'POST':
+            username = request.form['username']
+            password = request.form['password']
 
-        # Check if the username and password are provided
-        if not username or not password:
-            flash('Both username and password are required.', 'error')
-            return redirect(url_for('login'))
-
-        # Query the database to retrieve the user's hashed password
-        cursor.execute('SELECT id, username, password_hash FROM users WHERE username = %s', (username,))
-        result = cursor.fetchone()
-
-        if result and check_password_hash(result[2], password):
-            # If the username and password are valid, log in the user
-            user = User(result[0], result[1], result[2])
-            login_user(user)
-
-            flash('Login successful!', 'success')
-            # Redirect the user to the stored 'next' URL or '/dashboard' if it doesn't exist
-            next_url = request.args.get('next', url_for('dashboard'))
-            return redirect(next_url)
+            # Check if the username and password are provided
+            if not username or not password:
+                flash('Both username and password are required.', 'error')
+                return redirect(url_for('login'))
+    
+            # Query the database to retrieve the user's hashed password
+            cursor.execute('SELECT id, username, password_hash FROM users WHERE username = %s', (username,))
+            result = cursor.fetchone()
+    
+            if result and check_password_hash(result[2], password):
+                # If the username and password are valid, log in the user
+                user = User(result[0], result[1], result[2])
+                login_user(user)
+    
+                # Initialize the session and set the last access time
+                session['last_access_time'] = datetime.now()
+    
+                flash('Login successful!', 'success')
+                custom_logger.info(f'User {username} logged in Successfully')
+                # Redirect the user to the stored 'next' URL or '/dashboard' if it doesn't exist
+                #next_url = request.args.get('next', url_for('dashboard'))
+                #return redirect(next_url)
+                #next_page = request.args.get('next')
+                #return render_template('login.html', next_page=next_page)
+                return redirect(url_for('dashboard'))
+    
+            flash('Login failed. Please check your credentials.', 'error')
+    
+            # Capture the 'next' query parameter if it exists
             #next_page = request.args.get('next')
-            #return render_template('login.html', next_page=next_page)
-            #return redirect(url_for('dashboard'))
+    
+            #if next_page:
+                # Store 'next' in the session for later use
+               # session['next'] = next_page
 
-        flash('Login failed. Please check your credentials.', 'error')
+        return render_template('login.html')
+    else:
+        return render_template('setup1.html')
 
-        # Capture the 'next' query parameter if it exists
-        next_page = request.args.get('next')
-
-        if next_page:
-            # Store 'next' in the session for later use
-            session['next'] = next_page
-
-    return render_template('login.html')
+#@app.route('/', methods=['GET', 'POST'])
+#def login():
+#    if request.method == 'POST':
+#        username = request.form['username']\
+#        password = request.form['password']
+#
+#        # Check if the username and password are provided
+#        if not username or not password:
+#            flash('Both username and password are required.', 'error')
+#            return redirect(url_for('login'))
+#
+#        # Query the database to retrieve the user's hashed password
+#        cursor.execute('SELECT id, username, password_hash FROM users WHERE username = %s', (username,))
+#        result = cursor.fetchone()
+#
+#        if result and check_password_hash(result[2], password):
+#            # If the username and password are valid, log in the user
+#            user = User(result[0], result[1], result[2])
+#            login_user(user)
+#
+#            # Initialize the session and set the last access time
+#            session['last_access_time'] = datetime.now()
+#
+#            flash('Login successful!', 'success')
+#            custom_logger.info(f'User {username} logged in Successfully')
+#            # Redirect the user to the stored 'next' URL or '/dashboard' if it doesn't exist
+#            #next_url = request.args.get('next', url_for('dashboard'))
+#            #return redirect(next_url)
+#            #next_page = request.args.get('next')
+#            #return render_template('login.html', next_page=next_page)
+#            return redirect(url_for('dashboard'))
+#
+#        flash('Login failed. Please check your credentials.', 'error')
+#
+#        # Capture the 'next' query parameter if it exists
+#        #next_page = request.args.get('next')
+#
+#        #if next_page:
+#            # Store 'next' in the session for later use
+#           # session['next'] = next_page
+#
+#    return render_template('login.html')
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash('You have been logged out.', 'info')
+    flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
+    #return redirect(url_for('login', flash_message='You have been logged out.'))
 
+# Define your local backup directory here
+local_directory = CONFIG['Datastore']['BackupPath']  # Replace with the path to your local directory
+
+@app.route('/explorer')
+def explorer():
+    contents = list_directory_contents(local_directory)
+    return render_template('explorer.html', folder_path=local_directory, contents=contents)
+
+
+@app.route('/download/<path:file_path>')
+def download_file(file_path):
+    full_file_path = os.path.join(local_directory, file_path)
+
+    # Check if the file exists
+    if os.path.exists(full_file_path):
+        try:
+            # Use send_from_directory to serve the file as an attachment
+            return send_from_directory(local_directory, file_path, as_attachment=True)
+        except Exception as e:
+            return f"Error downloading file: {str(e)}"
+    else:
+        abort(404)
+
+@app.route('/explore/<path:folder_path>')
+def explore_directory(folder_path):
+    full_folder_path = os.path.join(local_directory, folder_path)
+    contents = list_directory_contents(full_folder_path)
+    return render_template('explorer.html', folder_path=folder_path, contents=contents)
+
+@app.route('/get_contents/<path:folder_path>')
+def get_contents(folder_path):
+    full_folder_path = os.path.join(local_directory, folder_path)
+    contents = list_directory_contents(full_folder_path)
+    return jsonify(contents)
+
+def list_directory_contents(directory_path):
+    try:
+        contents = []
+        for item in os.listdir(directory_path):
+            full_item_path = os.path.join(directory_path, item)
+            is_directory = os.path.isdir(full_item_path)
+            timestamp = get_timestamp(full_item_path)
+            relative_path = os.path.relpath(full_item_path, local_directory)
+            contents.append((relative_path, is_directory, timestamp))
+        return contents
+    except Exception as e:
+        return [str(e)]
+
+def get_timestamp(file_path):
+    try:
+        timestamp = os.path.getmtime(file_path)
+        return timestamp
+    except Exception as e:
+        return None
 
 # Function to generate or load the encryption key
 def get_or_generate_key():
@@ -189,66 +487,92 @@ cipher_suite = Fernet(encryption_key)
 
 # Connect to MySQL/MariaDB database
 db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'hack',
-    'database': 'passwords_db'
+    'host': CONFIG['Database']['host'],
+    'port': CONFIG['Database']['port'],
+    'user': CONFIG['Database']['username'],
+    'password': CONFIG['Database']['password'],
+    'database': CONFIG['Database']['database']
 }
 
-conn = mysql.connector.connect(**db_config)
-cursor = conn.cursor()
+if check_db_connection():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
 
-# Create the 'passwords' table if it doesn't exist
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS passwords (
-        username VARCHAR(255),
-        device VARCHAR(255) UNIQUE,
-        encrypted_password BLOB
-    )
-''')
+# # Create the 'passwords' table if it doesn't exist
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS passwords (
+#         username VARCHAR(255),
+#         device VARCHAR(255) UNIQUE,
+#         encrypted_password BLOB
+#     )
+# ''')
 
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS groups (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) UNIQUE
-    )
-''')
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS smtp_config (
+#         id INT PRIMARY KEY AUTO_INCREMENT,
+#         smtp_server VARCHAR(255),
+#         smtp_port INT,
+#         username VARCHAR(255) UNIQUE,
+#         encrypted_password BLOB
+# );
+# ''')
 
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS types (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) UNIQUE
-    )
-''')
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS groups (
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         name VARCHAR(255) UNIQUE
+#     )
+# ''')
+
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS types (
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         name VARCHAR(255) UNIQUE
+#     )
+# ''')
 
 
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL
-    )
-''')
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS users (
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         username VARCHAR(255) UNIQUE NOT NULL,
+#         password_hash VARCHAR(255) NOT NULL
+#     )
+# ''')
 
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS cron_jobs (
-        job_id VARCHAR(255) PRIMARY KEY,
-        site_name VARCHAR(255),
-        script_path VARCHAR(255),
-        minute VARCHAR(10),
-        hour VARCHAR(10),
-        day VARCHAR(10),
-        month VARCHAR(10),
-        day_of_week VARCHAR(10)
-    )
-''')
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS cron_jobs (
+#         job_id VARCHAR(255) PRIMARY KEY,
+#         site_name VARCHAR(255),
+#         script_path VARCHAR(255),
+#         minute VARCHAR(10),
+#         hour VARCHAR(10),
+#         day VARCHAR(10),
+#         month VARCHAR(10),
+#         day_of_week VARCHAR(10)
+#     )
+# ''')
 
-#cursor.execute('''
-#    ALTER TABLE passwords
-#    ADD COLUMN type VARCHAR(255)
-#''')
+# cursor.execute('''
+#     CREATE TABLE IF NOT EXISTS backup_records (
+#         id INT AUTO_INCREMENT PRIMARY KEY,
+#         backup_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#         device_name VARCHAR(255) NOT NULL,
+#         site_name VARCHAR(255) NOT NULL,
+#         type VARCHAR(255) NOT NULL,
+#         username VARCHAR(255) NOT NULL,
+#         exit_status ENUM('failed', 'succeeded') NOT NULL,
+#         file_name VARCHAR(255) NOT NULL
+#     )
+# ''')
 
-conn.commit()
+
+# #cursor.execute('''
+# #    ALTER TABLE passwords
+# #    ADD COLUMN type VARCHAR(255)
+# #''')
+
+# conn.commit()
 
 # Function to encrypt a password
 def encrypt_password(password):
@@ -265,10 +589,25 @@ def decrypt_password(encrypted_password):
 
 # Function to list available device names
 def list_devices():
-    cursor.execute('SELECT device FROM passwords')
-    results = cursor.fetchall()
-    devices = [result[0] for result in results]
-    return devices
+#    cursor = None
+#    try:
+#        conn = mysql.connector.connect(**db_config)
+#        cursor = conn.cursor()
+#        cursor.execute('SELECT device FROM passwords')
+#        results = cursor.fetchall()
+#        devices = [result[0] for result in results]
+#        return devices
+#    except Exception as e:
+#        # Handle exceptions, log errors, etc.
+#        return "error"
+#    finally:
+#        if cursor:
+#            cursor.close()
+#        if conn and conn.is_connected():
+#            conn.close()
+#def list_devices():
+    devices = DeviceRecord.query.all()
+    return [device.device for device in devices]
 
 # Function to list available groups
 def list_groups():
@@ -299,8 +638,38 @@ def dashboard():
     types = list_types()
     return render_template('dashboard.html', devices=devices, groups=groups, types=types)
 
+@app.route('/devicemgmt')
+@login_required
+def devicemgmt():
+    devices = list_devices()
+    groups = list_groups()
+    types = list_types()
+    return render_template('devicemgmt.html', devices=devices, groups=groups, types=types)
+
+@app.route('/sitemgmt')
+@login_required
+def sitemgmt():
+    devices = list_devices()
+    groups = list_groups()
+    types = list_types()
+    return render_template('sitemgmt.html', devices=devices, groups=groups, types=types)
+
+@app.route('/typemgmt')
+@login_required
+def typemgmt():
+    devices = list_devices()
+    groups = list_groups()
+    types = list_types()
+    return render_template('typemgmt.html', devices=devices, groups=groups, types=types)
+
+@app.route('/credretrieve')
+@login_required
+def credretrieve():
+    return render_template('credretrieve.html')
+
 @app.route('/create', methods=['POST'])
 @login_required
+@requires_admin
 def create():
     if request.method == 'POST':
         username = request.form['username']
@@ -335,6 +704,7 @@ def create():
 
 @app.route('/retrieve', methods=['POST', 'GET'])
 @login_required
+@requires_admin
 def retrieve():
     if request.method == 'POST':
         device = request.form['device']
@@ -356,6 +726,7 @@ def retrieve():
 
 # Function to edit credentials by device name
 @app.route('/edit/<device>', methods=['POST', 'GET'])
+@requires_admin
 @login_required
 def edit(device):
     cursor.execute('SELECT username FROM passwords WHERE device = %s', (device,))
@@ -388,6 +759,7 @@ def edit(device):
 
 # Function to delete credentials by device name
 @app.route('/delete/<device>', methods=['GET'])
+@requires_admin
 @login_required
 def delete(device):
     try:
@@ -423,6 +795,7 @@ def create_group():
     return redirect(url_for('dashboard'))
 
 @app.route('/delete_group', methods=['GET', 'POST'])
+@requires_admin
 @login_required
 def delete_group():
     groups = list_groups()
@@ -484,6 +857,7 @@ def create_type():
     return redirect(url_for('dashboard'))
 
 @app.route('/delete_type', methods=['GET', 'POST'])
+@requires_admin
 @login_required
 def delete_type():
     types = list_types()
@@ -509,14 +883,24 @@ def create_cron_schedule(minute, hour, day, month, day_of_week):
     cron_string = f"{minute} {hour} {day} {month} {day_of_week}"
     return cron_string
 
-
-
 @app.route('/schedule_cron_job', methods=['GET', 'POST'])
 @login_required
 def schedule_cron_job():
     if request.method == 'POST':
         site_name = request.form.get('site_name')
-        script_path = request.form.get('script_path')
+        script_file = f"/Users/ram/Downloads/AirBackupX/scripts/{site_name}.py"
+
+        # Ensure that the parent directory exists, create it if it doesn't
+        parent_directory = os.path.dirname(script_file)
+        if not os.path.exists(parent_directory):
+            os.makedirs(parent_directory)
+        
+        # Check if the script file exists, and create it with content if it doesn't
+        if not os.path.exists(script_file):
+            # Create the script file and add your desired content
+            with open(script_file, 'w') as file:
+                file.write("BackupCodeContentGoesHereblablaablaaaa\n")
+        
         minute = request.form.get('minute')
         hour = request.form.get('hour')
         day = request.form.get('day')
@@ -530,10 +914,10 @@ def schedule_cron_job():
         job_id = str(uuid.uuid4())
 
         # Initialize a CronTab object
-        cron = CronTab(user='root')  # Replace 'your_username' with the appropriate username
+        cron = CronTab(user='ram')  # Replace 'your_username' with the appropriate username
 
         # Create a new cron job and set its command
-        job = cron.new(command=f'python {script_path}')
+        job = cron.new(command=f'python {script_file}')
 
         # Set the cron schedule using the cron_schedule string
         job.setall(cron_schedule)
@@ -545,7 +929,7 @@ def schedule_cron_job():
         cursor.execute('''
             INSERT INTO cron_jobs (job_id, site_name, script_path, minute, hour, day, month, day_of_week)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (job_id, site_name, script_path, minute, hour, day, month, day_of_week))
+        ''', (job_id, site_name, script_file, minute, hour, day, month, day_of_week))
         conn.commit()
 
         flash('Cron job scheduled successfully!', 'success')
@@ -571,7 +955,7 @@ def edit_cron_job(job_id):
             script_path = result[0]
 
             # Remove the cron job from the user's crontab
-            cron = CronTab(user='root')  # Replace 'your_username' with the appropriate username
+            cron = CronTab(user='ram')  # Replace 'your_username' with the appropriate username
             jobs = cron.find_command(script_path)
 
             for job in jobs:
@@ -613,6 +997,7 @@ def edit_cron_job(job_id):
 
 
 @app.route('/delete_cron_job/<job_id>', methods=['GET', 'POST'])
+@requires_admin
 @login_required
 def delete_cron_job(job_id):
     if request.method == 'POST':
@@ -624,7 +1009,7 @@ def delete_cron_job(job_id):
             script_path = result[0]
 
             # Remove the cron job from the user's crontab
-            cron = CronTab(user='root')  # Replace 'your_username' with the appropriate username
+            cron = CronTab(user='ram')  # Replace 'your_username' with the appropriate username
             jobs = cron.find_command(script_path)
 
             for job in jobs:
@@ -643,7 +1028,312 @@ def delete_cron_job(job_id):
 
     return render_template('delete_cron_job.html')
 
+@app.route('/runonce_cron_job/<job_id>', methods=['GET', 'POST'])
+@login_required
+def runonce_cron_job(job_id):
+    if request.method == 'GET':
+        # Retrieve the job details from the database based on job_id
+        cursor.execute('SELECT script_path FROM cron_jobs WHERE job_id = %s', (job_id,))
+        result = cursor.fetchone()
 
-if __name__ == '__main__':
-    #app.run(debug=True)
-    app.run(host='0.0.0.0', port=3030)
+        if result:
+            script_path = result[0]
+            if os.path.exists(script_path):
+                flash('Job Started Successfully', 'success')
+                # Use subprocess to run the local command
+                try:
+                    subprocess.Popen(['python3.9', script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                except Exception as e:	
+                    flash(f'Error running the script: {e}', 'error')
+                return redirect(url_for('list_cron_jobs'))
+            else:
+                print('Script Not Found')
+                raise FileNotFoundError('Script handling error, Please check with application owner')
+        else:
+            flash('Cron job not found.', 'error')
+            return redirect(url_for('list_cron_jobs'))
+
+    return redirect(url_for('list_cron_jobs'))
+
+@app.route('/get_job_status/<site_name>', methods=['GET'])
+def get_job_status(site_name):
+    #log_file_path = f'{site_name}_runner.log'  # Update with the actual path to your log file
+    log_file_path = 'runner.log'  # Update with the actual path to your log file
+    default_status = 'Unknown'  # Default status if site name is not found in the log file
+
+    site_statuses = {}  # Dictionary to store the latest status for each site
+
+    # Read the log file and extract status based on site name
+    try:
+        with open(log_file_path, 'r') as log_file:
+            for line in log_file:
+                site, status = line.strip().split(':')
+                # Update status for the site in the dictionary
+                site_statuses[site] = status
+
+        # Get the latest status for the requested site_name
+        latest_status = site_statuses.get(site_name, default_status)
+        return latest_status
+
+    except FileNotFoundError:
+        # Handle file not found error
+        return default_status
+    except Exception as e:
+        # Handle other exceptions if necessary
+        print(str(e))
+
+    # Return default status if site name is not found in the log file
+    return default_status
+
+
+def get_all_users():
+    try:
+        cursor.execute('SELECT username FROM users')
+        users = [result[0] for result in cursor.fetchall()]
+        return users
+    except Exception as e:
+        print(f"Error fetching users from the database: {str(e)}")
+        return []
+
+# Function to delete a user by username
+def delete_user_by_username(username):
+    try:
+        cursor.execute('DELETE FROM users WHERE username = %s', (username,))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        flash(f"An error occurred while deleting user '{username}': {str(e)}", 'error')
+
+@app.route('/delete_account', methods=['POST'])
+@requires_admin
+@login_required
+def delete_account():
+    if request.method == 'POST':
+        # Get the list of users to delete from the form
+        users_to_delete = request.form.getlist('delete_users[]')
+
+        if not users_to_delete:
+            flash('No users selected for deletion.', 'warning')
+        else:
+            # Loop through the selected users and delete their accounts
+            for user in users_to_delete:
+                cursor.execute('DELETE FROM users WHERE username = %s', (user,))
+                conn.commit()
+                flash(f'Account for user "{user}" deleted successfully.', 'success')
+
+    return redirect(url_for('user_management'))
+
+
+# Function to update a user's password by username
+def update_user_password(username, new_password):
+    try:
+        password_hash = generate_password_hash(new_password)
+        cursor.execute('UPDATE users SET password_hash = %s WHERE username = %s', (password_hash, username))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        flash(f"An error occurred while resetting the password for user '{username}': {str(e)}", 'error')
+
+
+#@app.route('/user_registration', methods=['GET', 'POST'])
+#@login_required
+#def user_registration():
+#    if current_user.username == "2222":
+#        return render_template('user_registration.html')
+#    else:
+#        flash('Unauthorized Access', 'error')
+#        return redirect(url_for('dashboard'))
+
+@app.route('/user_management', methods=['GET', 'POST'])
+@requires_admin
+@login_required
+def user_management():
+    if current_user.username == "2222":
+        # List Users
+        if request.method == 'GET':
+            users = get_all_users()  # Implement this function to fetch all users
+            return render_template('user_management.html', users=users)
+    
+        # Delete User
+        if request.method == 'POST' and 'delete_username' in request.form:
+            delete_username = request.form['delete_username']
+            if delete_username:
+                delete_user_by_username(delete_username)  # Implement this function to delete a user
+                flash(f"User '{delete_username}' deleted successfully!", 'success')
+    
+        # Reset Password
+        # Reset Password
+        if request.method == 'POST' and 'reset_username' in request.form and 'new_password' in request.form:
+            reset_username = request.form['reset_username']
+            new_password = request.form['new_password']
+            if reset_username and new_password:
+                # Check if the user exists in the database before resetting the password
+                cursor.execute('SELECT id FROM users WHERE username = %s', (reset_username,))
+                existing_user = cursor.fetchone()
+                if existing_user:
+                    # User exists, proceed with password reset
+                    new_password_hash = generate_password_hash(new_password)
+                    cursor.execute('UPDATE users SET password_hash = %s WHERE username = %s',
+                                   (new_password_hash, reset_username))
+                    conn.commit()
+                    flash(f"Password for user '{reset_username}' reset successfully!", 'success')
+                else:
+                    flash(f"User '{reset_username}' does not exist. Password reset failed.", 'error')
+            else:
+                flash("Both username and new password are required.", 'error')
+        
+        return redirect(url_for('user_management'))
+    else:
+        flash('Unauthorized Access', 'error')
+        return redirect(url_for('dashboard'))
+
+def list_backup_records():
+    data = BackupRecord.query.all()
+    #Convert the data to a list of dictionaries
+    backup_records_list = []
+    for record in data:
+        backup_records_list.append({
+            "backup_date": record.backup_date,
+            "device_name": record.device_name,
+            "site_name": record.site_name,
+            "type": record.type,
+            "username": record.username,
+            "exit_status": record.exit_status,
+            "file_name": record.file_name
+        })
+    
+    # Return the data as JSON
+    return (backup_records_list)
+
+##Perfect One
+@app.route('/backup_records')
+def backup_records():
+    # Query the database table and pass the data to the template
+    data = BackupRecord.query.all()
+    return render_template('backup_records.html', backup_records=data)
+
+# @app.route('/backup_records')
+# def backup_records():
+#     # Query the database table and get the data
+#     data = BackupRecord.query.all()
+    
+#     # Convert the data to a list of dictionaries
+#     backup_records_list = []
+#     for record in data:
+#         backup_records_list.append({
+#             "backup_date": record.backup_date,
+#             "device_name": record.device_name,
+#             "site_name": record.site_name,
+#             "type": record.type,
+#             "username": record.username,
+#             "exit_status": record.exit_status,
+#             "file_name": record.file_name
+#         })
+    
+#     # Return the data as JSON
+#     return jsonify(backup_records_list)
+
+# # Route to display backup records
+# @app.route('/backup_records')
+# def backup_records():
+#     backup_records = list_backup_records()
+#     return render_template('backup_records.html', backup_records=backup_records)
+
+# # Route to fetch updated backup records (server-side)
+@app.route('/fetch_backup_records')
+def fetch_backup_records():
+    backup_records = list_backup_records()
+    return jsonify(backup_records)
+
+@app.route('/upload_link')
+@login_required
+def upload_link():
+    return render_template('upload.html')
+
+@app.route('/config_ui')
+@requires_admin
+@login_required
+def config_ui():
+    section_selected = request.args.get('section', 'section1')  # Default to section1 if not provided
+    selected_section_keys = CONFIG.get(section_selected, {}).keys()  # Get keys of the selected section or an empty list if not found
+    return render_template('config.html', config=CONFIG, section_selected=section_selected, selected_section_keys=selected_section_keys)
+
+@app.route('/config_update', methods=['POST'])
+def config_update():
+    section = request.form['section']
+    key = request.form['key']
+    new_value = request.form['new_value']
+
+    # Read the existing Python configuration file
+    with open('config/config.py', 'r') as py_file:
+        python_code = py_file.read()
+
+    # Extract CONFIG dictionary from the Python code
+    exec(python_code, globals())
+    config_data = globals().get('CONFIG', {})
+
+    # Update the nested configuration
+    config_data[section][key] = new_value
+
+    # Convert the updated dictionary to JSON format
+    json_config = json.dumps(config_data, indent=4)
+
+    # Write the updated JSON data back to the Python configuration file
+    with open('config/config.py', 'w') as py_file:
+        py_file.write(f'CONFIG = {json_config}')
+
+    return redirect('/config_ui')
+
+#def allowed_file(filename):
+#    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+#
+#@app.route('/upload', methods=['POST'])
+#def upload_file():
+#    if 'csv_file' not in request.files:
+#        # No file part
+#        return redirect(request.url)
+#    file = request.files['csv_file']
+#    if file.filename == '':
+#        # No selected file
+#        return redirect(request.url)
+#    if file and allowed_file(file.filename):
+#        # Secure the filename and save it to the uploads folder
+#        filename = secure_filename(file.filename)
+#        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#        file.save(file_path)
+#        # Process the uploaded CSV file
+#        process_csv(file_path)
+#        db.session.commit()
+#        db.session.close()
+#        flash("File uploaded and processed successfully.", 'success')
+#        return redirect(url_for('dashboard')) 
+#    else:
+#        # Invalid file type
+#        return "Invalid file type. Please upload a CSV file."
+#
+#def process_csv(file_path):
+#    with open(file_path, 'r') as file:
+#        csv_reader = csv.DictReader(file)
+#        for row in csv_reader:
+#            username = row['username']
+#            device = row['device']
+#            password = row['encrypted_password']
+#            encrypted_password = encrypt_password(password)
+#            group_name = row['group_name']
+#            type = row['type']
+#            new_record = DeviceRecord(username=username, device=device, encrypted_password=encrypted_password, group_name=group_name, type=type)
+#            db.session.add(new_record)
+#            #db.session.commit()
+#            #db.session.close()
+#    os.remove(file_path)  # Remove the uploaded CSV file after processing
+
+# Check database connection before starting the Flask app
+if check_db_connection():
+    if __name__ == '__main__':
+        #app.run(debug=True)
+        app.run(host='0.0.0.0', port=3030)
+        conn.close()
+else:
+    # Exit the application if the database connection fails
+    print('CRITICAL: Database not accessible, Fix and retry.')
+    exit(24)
