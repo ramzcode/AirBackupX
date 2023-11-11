@@ -48,25 +48,30 @@ AirBackupX - A Simple yet powerful tool that can backup Network or TCP/IP based 
 
 
 Login Screen:
-![image](https://github.com/ramzcode/AirBackupX/assets/76745955/fb117a21-cf50-474a-88e9-d9a269a55612)
+![image](https://github.com/ramzcode/AirBackupX/assets/76745955/e1205c90-b7a3-4d50-9a92-8c171caa1e41)
+
 
 
 Dashboard:
-![image](https://github.com/ramzcode/AirBackupX/assets/76745955/f599c00e-7d7e-42ef-9496-e78ac9110312)
+![image](https://github.com/ramzcode/AirBackupX/assets/76745955/2b74e9f2-c088-41b4-89a7-67dcd3e61345)
+
 
 
 User Management - Creation:
-![image](https://github.com/ramzcode/AirBackupX/assets/76745955/40815d3e-cd24-40fb-ba80-250c2156b603)
+![image](https://github.com/ramzcode/AirBackupX/assets/76745955/9c755b2a-8800-4620-b3db-27cc100765e8)
+
 
 
 User Management:
-![image](https://github.com/ramzcode/AirBackupX/assets/76745955/c021d04c-c466-4469-b125-d0a57e174724)
+![image](https://github.com/ramzcode/AirBackupX/assets/76745955/ba9a4e34-e574-4d6c-98e0-2c6035b8dc2a)
 
 
 Job Events:
-![image](https://github.com/ramzcode/AirBackupX/assets/76745955/9594cf8f-f4b7-450d-98f1-dff3f4f62cda)
+![image](https://github.com/ramzcode/AirBackupX/assets/76745955/fd9f2f5d-4aaf-411b-838f-4d389621ad85)
+
 
 
 Device Management:
-![image](https://github.com/ramzcode/AirBackupX/assets/76745955/d798525e-2074-4c7d-b02d-56a5032b487f)
+![image](https://github.com/ramzcode/AirBackupX/assets/76745955/5ca27069-d383-4a94-8ee5-40c2b339b47a)
+
 
