@@ -1,6 +1,6 @@
 ## AirBackupX
  
-AirBackupX - A Simple yet powerful tool that can backup Network or TCP/IP based Device Configurations and an AIO GUI based web application that can work beyond with high level of flexibility.
+AirBackupX - A Simple yet powerful web application that can backup Network or TCP/IP based Device Configurations and an AIO GUI based web application that can work beyond with high level of flexibility.
 
 
 #### Features that AirBackupX Supports:
