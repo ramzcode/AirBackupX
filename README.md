@@ -23,7 +23,8 @@ AirBackupX - A Simple yet powerful tool that can backup Network or TCP/IP based 
 17. RestFul API support for all action items.
 18. Live Job feeds and Updates.
 19. Dynamic, intelligent Modules and plugin auto selections.
-20. And many more....  
+20. Notifications and Alerts.
+21. And many more....  
 
 #### Who can use AirBackupX?
 1. A Home user who want to take backup of his IP based device configurations.
@@ -47,19 +48,25 @@ AirBackupX - A Simple yet powerful tool that can backup Network or TCP/IP based 
 
 
 Login Screen:
-![Alt text](image.png)
+![image](https://github.com/ramzcode/AirBackupX/assets/76745955/fb117a21-cf50-474a-88e9-d9a269a55612)
+
 
 Dashboard:
-![Alt text](image-1.png)
+![image](https://github.com/ramzcode/AirBackupX/assets/76745955/f599c00e-7d7e-42ef-9496-e78ac9110312)
+
 
 User Management - Creation:
-![Alt text](image-2.png)
+![image](https://github.com/ramzcode/AirBackupX/assets/76745955/40815d3e-cd24-40fb-ba80-250c2156b603)
+
 
 User Management:
-![Alt text](image-3.png)
+![image](https://github.com/ramzcode/AirBackupX/assets/76745955/c021d04c-c466-4469-b125-d0a57e174724)
+
 
 Job Events:
-![Alt text](image-4.png)
+![image](https://github.com/ramzcode/AirBackupX/assets/76745955/9594cf8f-f4b7-450d-98f1-dff3f4f62cda)
+
 
 Device Management:
-![Alt text](image-5.png)
+![image](https://github.com/ramzcode/AirBackupX/assets/76745955/d798525e-2074-4c7d-b02d-56a5032b487f)
+
