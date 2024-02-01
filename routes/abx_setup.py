@@ -137,7 +137,8 @@ def setup1():
                     username VARCHAR(255) UNIQUE NOT NULL,
                     password_hash VARCHAR(255) NOT NULL,
                     emailID VARCHAR(255) NOT NULL,
-                    role VARCHAR(255) NOT NULL
+                    role VARCHAR(255) NOT NULL,
+                    totp_secret VARCHAR(255) NOT NULL
                 )
             ''')
             

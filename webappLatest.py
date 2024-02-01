@@ -17,12 +17,14 @@ from flask_bcrypt import Bcrypt
 from werkzeug.security import generate_password_hash, check_password_hash  # Import password hashing function
 import logging
 import logging.handlers
+import pyotp
 #from routes.widgets import widgets_bp
 #from routes.widgets import widget_type, widget_device, widget_jobs, widget_site
 from routes.widgets import fetch_widgets_data
 from routes.dev_import import upload
 from routes.smtp_config import smtp_config_ui, update_smtp, send_email
 from routes.abx_setup import setup1, setup2, setup3, setup4
+from routes.emailer import send_registration_email
 from config.config  import CONFIG
 
 app = Flask(__name__)
@@ -273,10 +275,14 @@ def user_registration():
         if existing_user:
             flash('Username already exists. Please choose a different username.', 'error')
         else:
+            # Generate a random OTP secret
+            totp_secret = pyotp.random_base32()
             # Hash and store the user's password
             password_hash = generate_password_hash(password)
-            cursor.execute('INSERT INTO users (username, password_hash, emailID, role) VALUES (%s, %s, %s, %s)', (username, password_hash, emailID, role))
+            cursor.execute('INSERT INTO users (username, password_hash, emailID, role, totp_secret) VALUES (%s, %s, %s, %s, %s)', (username, password_hash, emailID, role, totp_secret))
             conn.commit()
+
+            send_registration_email(username=username, email=emailID, totp_secret=totp_secret)
 
             flash('Registration successful! Account Created', 'success')
             # If 'next' is provided in the query string, redirect there, otherwise go to 'dashboard'

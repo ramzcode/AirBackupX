@@ -13,12 +13,25 @@
     <!-- Include Bootstrap CSS (or your preferred CSS framework) -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+    /* Center the form on the page */
+    
+    .centered-form {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Set a maximum width for the form */
+        .login-form {
+            max-width: 400px; /* Adjust the width as needed */
+            width: 100%;
+        }
 	.centered-content {
             text-align: center;
             position: fixed;
             bottom: 0;
             width: 100%;
-            #background-color: #f1f1f1; /* optional: add background color for better visibility */
+            /* background-color: #f1f1f1; optional: add background color for better visibility */
             padding: 6px 0; /* optional: add padding for better spacing */
         }
 
@@ -31,7 +44,7 @@
             height: auto; /* Maintain aspect ratio */
             margin: 0 auto;
             display: block;
-            margin-bottom: 50px;
+            margin-bottom: 25px;
             margin-top: 24px;
         }
 	/* Flash message popup styles */
@@ -76,50 +89,45 @@
     </script>-->
 </head>
 <body>
-    <div class="flash-popup" id="flash-popup">
-        <!-- Flash messages will appear here -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-dismissible {% if category == 'success' %}alert-success{% else %}alert-danger{% endif %}">
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                {{ message }}
+    <div class="container mt-5" style="margin-top: 1rem!important;">
+            <div class="flash-popup" id="flash-popup">
+                <!-- Flash messages will appear here -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-dismissible {% if category == 'success' %}alert-success{% else %}alert-danger{% endif %}">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                {% endwith %}
             </div>
-            {% endfor %}
-        {% endif %}
-        {% endwith %}
-    </div>
-    <div class="container mt-5">
-	<div class="flash-popup" id="flash-popup">
-            <!-- Flash messages will appear here -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                <div class="alert alert-dismissible {% if category == 'success' %}alert-success{% else %}alert-danger{% endif %}">
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    {{ message }}
-                </div>
-                {% endfor %}
-            {% endif %}
-            {% endwith %}
-        </div>
         <div class="row justify-content-center">
             <div class="col-md-6">
 		<img src="{{ url_for('static', filename='images/login_logo.png') }}" id="logo" alt="Logo">
-                <h3 class="text-center">Login</h3>
-                <!-- Display Flash Messages -->
-		<!-- Display Flash Messages -->
-                <form method="POST">
-                    <div class="form-group">
-                        <label for="username">Username:</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
+                <h4 class="text-center">Sign in</h4>
+                <div class="container mt-5 centered-form">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6 login-form">
+                            <form method="POST">
+                                <div class="form-group">
+                                    <label for="username">Username:</label>
+                                    <input type="text" class="form-control" id="username" name="username" required style="width: 300px;">
+                                </div>
+                                <div class="form-group">
+                                    <label for="password">Password:</label>
+                                    <input type="password" class="form-control" id="password" name="password" required style="width: 300px;">
+                                </div>
+                                <div class="form-group">
+                                    <label for="otp">OTP:</label>
+                                    <input type="text" class="form-control" id="otp" name="otp" required style="width: 300px;">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Login</button>
+                            </form>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="password">Password:</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Login</button>
-                </form>
+                </div>    
             </div>
         </div>
     </div>
