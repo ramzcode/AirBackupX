@@ -329,43 +329,47 @@ def login():
         if request.method == 'POST':
             username = request.form['username']
             password = request.form['password']
+            otp = request.form['otp']
 
             # Check if the username and password are provided
-            if not username or not password:
-                flash('Both username and password are required.', 'error')
+            if not username or not password or not otp:
+                flash('Both username, password and OTP are required.', 'error')
                 return redirect(url_for('login'))
     
             # Query the database to retrieve the user's hashed password
-            cursor.execute('SELECT id, username, password_hash FROM users WHERE username = %s', (username,))
+            cursor.execute('SELECT id, username, password_hash, totp_secret FROM users WHERE username = %s', (username,))
             result = cursor.fetchone()
     
-            if result and check_password_hash(result[2], password):
-                # If the username and password are valid, log in the user
-                user = User(result[0], result[1], result[2])
-                login_user(user)
-    
-                # Initialize the session and set the last access time
-                session['last_access_time'] = datetime.now()
-    
-                flash('Login successful!', 'success')
-                custom_logger.info(f'User {username} logged in Successfully')
-                # Redirect the user to the stored 'next' URL or '/dashboard' if it doesn't exist
-                #next_url = request.args.get('next', url_for('dashboard'))
-                #return redirect(next_url)
-                #next_page = request.args.get('next')
-                #return render_template('login.html', next_page=next_page)
-                return redirect(url_for('dashboard'))
-    
-            flash('Login failed. Please check your credentials.', 'error')
-    
-            # Capture the 'next' query parameter if it exists
-            #next_page = request.args.get('next')
-    
-            #if next_page:
-                # Store 'next' in the session for later use
-               # session['next'] = next_page
-
-        return render_template('login.html')
+            if result:
+                totp = pyotp.TOTP(result[3])
+                if totp.verify(otp):
+                    if check_password_hash(result[2], password):
+                        # If the username and password are valid, log in the user
+                        user = User(result[0], result[1], result[2])
+                        login_user(user)
+        
+                        # Initialize the session and set the last access time
+                        session['last_access_time'] = datetime.now()
+        
+                        flash('Login successful!', 'success')
+                        custom_logger.info(f'User {username} logged in Successfully')
+                        # Redirect the user to the stored 'next' URL or '/dashboard' if it doesn't exist
+                        #next_url = request.args.get('next', url_for('dashboard'))
+                        #return redirect(next_url)
+                        #next_page = request.args.get('next')
+                        #return render_template('login.html', next_page=next_page)
+                        return redirect(url_for('dashboard'))
+                    else:
+                        flash('Login failed. Please check your credentials.', 'error')
+                        return render_template('login.html')
+                else:
+                    flash('Invalid OTP. Please enter a valid OTP.', 'error')
+                    return render_template('login.html')
+            else:
+                flash('Account Does Not Exist. Please check your credentials.', 'error')
+                return render_template('login.html')
+        else:
+            return render_template('login.html')
     else:
         return render_template('setup1.html')
 
